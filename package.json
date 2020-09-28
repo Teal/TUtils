@@ -1,0 +1,28 @@
+{
+  "name": "tutils",
+  "private": false,
+  "version": "2.0.1",
+  "repository": "https://github.com/Teal/TUtils",
+  "description": "TUtils 提供了 200+ 个 Node.js 上常用的工具函数库，比如通配符、文件监听、网络库等",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "xuld <xuld@vip.qq.com>",
+  "engines": {
+    "node": ">=10.12"
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.11.2",
+    "coveralls": "^3.1.0",
+    "mocha": "^8.1.3",
+    "nyc": "^15.1.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --declaration && node -e \"var pkg = require('./package.json'); delete pkg.private; delete pkg.devDependencies; delete pkg.scripts; fs.writeFileSync('dist/package.json', JSON.stringify(pkg, undefined, 2)); fs.copyFileSync('README.md', 'dist/README.md'); fs.copyFileSync('LICENSE', 'dist/LICENSE');\"",
+    "watch": "tsc -p tsconfig.json --declaration --watch",
+    "test": "mocha -r ts-node/register/transpile-only --ui exports **/*.test.ts",
+    "coverage": "node -e \"process.argv[8] = require.resolve('mocha/bin/mocha'); if (process.argv[14]) { process.argv[13] = process.argv[14].replace(/^src([\\\\/].*)\\.ts/, 'test$' + '1.test.ts'); process.argv.splice(14, 1) } require('nyc/bin/nyc')\" nyc --reporter=text-summary --reporter=html --report-dir=coverage --temp-dir=coverage/.nyc_output --extension=.ts --include=src/** mocha -r ts-node/register/transpile-only --ui exports **/*.test.ts",
+    "coveralls": "nyc report --reporter=text-lcov --report-dir=coverage --temp-dir=coverage/.nyc_output | coveralls"
+  }
+}

@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"outDir": "dist",
+		"target": "es2018",
+		"module": "commonjs",
+		"newLine": "LF",
+		"useDefineForClassFields": false,
+		"experimentalDecorators": true,
+		"preserveConstEnums": true,
+		"esModuleInterop": true,
+		"stripInternal": true,
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowUmdGlobalAccess": true
+	},
+	"include": [
+		"./src"
+	]
+}

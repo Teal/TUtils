@@ -1,0 +1,66 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "Build",
+			"type": "shell",
+			"command": "npm run build --silent",
+			"problemMatcher": [],
+			"presentation": {
+				"showReuseMessage": false,
+				"clear": true
+			}
+		},
+		{
+			"group": "build",
+			"label": "Watch",
+			"type": "shell",
+			"command": "npm run watch --silent",
+			"problemMatcher": [],
+			"presentation": {
+				"showReuseMessage": false,
+				"clear": true
+			}
+		},
+		{
+			"group": "test",
+			"label": "Test",
+			"type": "shell",
+			"command": "npm run test --silent",
+			"problemMatcher": [],
+			"presentation": {
+				"showReuseMessage": false,
+				"clear": true
+			}
+		},
+		{
+			"group": "test",
+			"label": "Coverage",
+			"type": "shell",
+			"command": "npm run coverage --silent",
+			"problemMatcher": [],
+			"presentation": {
+				"showReuseMessage": false,
+				"clear": true
+			}
+		},
+		{
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"type": "shell",
+			"label": "Coverage(Current)",
+			"command": "npm run coverage \"${relativeFile}\" --silent",
+			"problemMatcher": [],
+			"presentation": {
+				"showReuseMessage": false,
+				"clear": true
+			}
+		}
+	]
+}

@@ -1,0 +1,60 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug Tests(Current)",
+			"runtimeExecutable": "mocha",
+			"runtimeArgs": [
+				"-r",
+				"ts-node/register/transpile-only",
+				"--ui",
+				"exports",
+				"--colors",
+				"--no-timeout",
+				"${relativeFile}"
+			],
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/mocha/**",
+				"node_modules/ts-node/**",
+				"node_modules/v8-compile-cache/**"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug Tests",
+			"runtimeExecutable": "mocha",
+			"runtimeArgs": [
+				"-r",
+				"ts-node/register/transpile-only",
+				"--ui",
+				"exports",
+				"--colors",
+				"--no-timeout",
+				"${workspaceFolder}/**/*.test.ts"
+			],
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/mocha/**",
+				"node_modules/ts-node/**",
+				"node_modules/v8-compile-cache/**"
+			]
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/mocha/**",
+				"node_modules/ts-node/**",
+				"node_modules/v8-compile-cache/**"
+			]
+		}
+	]
+}
