@@ -195,7 +195,7 @@ export interface CommandLineOption {
 	/** 当前选项的参数名，如果未设置说明没有参数 */
 	argument?: string
 	/** 当前选项的默认值，如果未设置则表示当前选项是必填的 */
-	default?: any
+	default?: string | null
 	/** 是否允许重复使用当前选项 */
 	multiple?: boolean
 }
