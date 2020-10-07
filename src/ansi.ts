@@ -446,7 +446,7 @@ export function formatCodeFrame(content: string, line?: number, column?: number,
 	if (selectedLine != undefined && column != undefined) {
 		// 确保 firstColumn 和 startColumn 之间的距离 < columns / 2
 		let leftWidth = Math.floor(maxWidth / 2)
-		for (firstColumn = Math.min(column, selectedLine.length - 1); firstColumn > 0 && leftWidth > 0; firstColumn--) {
+		for (firstColumn = Math.max(Math.min(column, selectedLine.length - 1), 0); firstColumn > 0 && leftWidth > 0; firstColumn--) {
 			leftWidth -= getCharWidth(selectedLine.charCodeAt(firstColumn))
 		}
 	}
