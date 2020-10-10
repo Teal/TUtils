@@ -28,7 +28,7 @@ export function encodeDataURI(mimeType: string, data: string | Buffer) {
 }
 
 /**
- * 解码指定的统一资源标识符（URI），如果解码失败则返回空
+ * 解码指定的统一资源标识符（URI），如果解码失败则返回 `null`
  * @param value 要解码的统一资源标识符（URI）
  */
 export function decodeDataURI(value: string) {

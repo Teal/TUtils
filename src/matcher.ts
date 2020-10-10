@@ -156,7 +156,7 @@ export class Matcher {
 	/**
 	 * 获取匹配结果的基路径
 	 * @param path 要获取的路径
-	 * @returns 如果没有匹配的基路径则返回空
+	 * @returns 如果没有匹配的基路径则返回 `null`
 	 */
 	baseOf(path: string) {
 		let result: string | null = null

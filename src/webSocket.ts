@@ -745,7 +745,7 @@ export interface WebSocketOptions extends Omit<RequestOptions, "protocol" | "hos
 /** 表示一个 WebSocket 扩展 */
 export interface WebSocketExtension {
 	/**
-	 * 处理客户端提交的扩展头并返回支持的扩展头，如果都不支持则返回空
+	 * 处理客户端提交的扩展头并返回支持的扩展头，如果都不支持则返回 `null`
 	 * @param header 客户端请求的扩展头
 	 * @returns 返回传递给客户端的扩展头
 	 */
@@ -890,7 +890,7 @@ export class WebSocketServer extends EventEmitter {
 		server.on("upgrade", this.handleUpgrade)
 	}
 
-	/** 获取当前服务器正在监听的地址，如果服务未启动则返回空 */
+	/** 获取当前服务器正在监听的地址，如果服务未启动则返回 `null` */
 	address() { return this.server.address() as AddressInfo | null }
 
 	/** 判断当前服务器是否使用了加密传输协议（HTTPS） */

@@ -570,7 +570,7 @@ export class MemoryFileSystem extends FileSystem {
 	}
 
 	/**
-	 * 获取指定路径区分大小写的实际路径，如果地址不存在则返回空
+	 * 获取指定路径区分大小写的实际路径，如果地址不存在则返回 `null`
 	 * @param path 原路径
 	 */
 	async getRealPath(path: string) {

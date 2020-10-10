@@ -70,7 +70,7 @@ export class Resolver {
 	private _cacheWithContainingDir?: boolean
 
 	/**
-	 * 解析指定的模块名对应的绝对路径，如果找不到模块则返回空，如果模块被忽略则返回 `false`
+	 * 解析指定的模块名对应的绝对路径，如果找不到模块则返回 `null`，如果模块被忽略则返回 `false`
 	 * @param moduleName 要解析的模块名，不允许是空字符串
 	 * @param containingDir 所在文件夹的绝对路径
 	 * @param trace 如果提供了数组，则用于收集本次解析的日志
@@ -112,7 +112,7 @@ export class Resolver {
 	readonly aliasFields: string[]
 
 	/**
-	 * 忽略缓存解析指定的模块名对应的绝对路径，如果找不到模块则返回空，如果模块被忽略则返回 `false`
+	 * 忽略缓存解析指定的模块名对应的绝对路径，如果找不到模块则返回 `null`，如果模块被忽略则返回 `false`
 	 * @param moduleName 要解析的模块名，不允许是空字符串
 	 * @param containingDir 所在文件夹的绝对路径
 	 * @param trace 如果提供了数组，则用于收集本次解析的日志
@@ -211,7 +211,7 @@ export class Resolver {
 	readonly extensions: string[]
 
 	/**
-	 * 解析一个文件或文件夹路径，如果找不到模块则返回空，如果模块被忽略则返回 `false`
+	 * 解析一个文件或文件夹路径，如果找不到模块则返回 `null`，如果模块被忽略则返回 `false`
 	 * @param moduleName 要解析的模块名，不允许是空字符串
 	 * @param containingDir 所在文件夹的绝对路径
 	 * @param trace 如果提供了数组，则用于收集本次解析的日志
@@ -375,7 +375,7 @@ export class Resolver {
 	private readonly _descriptionFileCache: Map<string, PackageFile | null | Promise<PackageFile | null>>
 
 	/**
-	 * 查找并解析属于某个文件夹的描述文件（如 `package.json`），如果文件不存在或解析失败则返回空
+	 * 查找并解析属于某个文件夹的描述文件（如 `package.json`），如果文件不存在或解析失败则返回 `null`
 	 * @param dir 要查找的文件夹
 	 * @param trace 如果提供了数组，则用于收集本次解析的日志
 	 */
@@ -396,7 +396,7 @@ export class Resolver {
 	}
 
 	/**
-	 * 读取属于某个文件夹的描述文件（如 `package.json`），如果文件不存在或解析失败则返回空
+	 * 读取属于某个文件夹的描述文件（如 `package.json`），如果文件不存在或解析失败则返回 `null`
 	 * @param dir 要查找的文件夹
 	 * @param trace 如果提供了数组，则用于收集本次解析的日志
 	 */
@@ -416,7 +416,7 @@ export class Resolver {
 	}
 
 	/**
-	 * 忽略缓存读取属于某个文件夹的描述文件（如 `package.json`），如果文件不存在或解析失败则返回空
+	 * 忽略缓存读取属于某个文件夹的描述文件（如 `package.json`），如果文件不存在或解析失败则返回 `null`
 	 * @param dir 要查找的文件夹
 	 * @param trace 如果提供了数组，则用于收集本次解析的日志
 	 */

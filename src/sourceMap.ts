@@ -175,7 +175,7 @@ export class SourceMapBuilder implements SourceMapGenerator {
 	// #region 读取
 
 	/**
-	 * 获取生成文件中指定位置的源信息，如果找不到映射点则返回空
+	 * 获取生成文件中指定位置的源信息，如果找不到映射点则返回 `null`
 	 * @param generatedLine 生成文件中的行号（从 0 开始）
 	 * @param generatedColumn 生成文件中的列号（从 0 开始）
 	 * @param adjustColumn 是否根据映射点和指定列计算偏移后的列号
@@ -606,7 +606,7 @@ function decodeBase64VLQ(value: string, context: { index: number }) {
 const sourceMappingURL = /(?:\/\/(?:[#@]\ssourceMappingURL=([^\s'"]*))\s*$|\/\*(?:\s*\r?\n(?:\/\/)?)?(?:[#@]\ssourceMappingURL=([^\s'"]*))\s*\*\/)\s*$/
 
 /**
- * 读取指定内容的 `#sourceMappingURL` 注释，如果不存在则返回空
+ * 读取指定内容的 `#sourceMappingURL` 注释，如果不存在则返回 `null`
  * @param content 要读取的内容
  */
 export function getSourceMappingURL(content: string) {

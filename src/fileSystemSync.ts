@@ -295,14 +295,14 @@ export function readFile(path: string, encoding?: any) {
 /**
  * 使用 UTF-8 编码读取指定的文本文件
  * @param path 要读取的文件路径
- * @param throwIfNotFound 如果文件不存在，是否抛出异常，如果值为 `false`，则文件不存在时返回空
+ * @param throwIfNotFound 如果文件不存在，是否抛出异常，如果值为 `false`，则文件不存在时返回 `null`
  */
 export function readText(path: string, throwIfNotFound: false): string | null
 
 /**
  * 使用 UTF-8 编码读取指定的文本文件
  * @param path 要读取的文件路径
- * @param throwIfNotFound 如果文件不存在，是否抛出异常，如果值为 `false`，则文件不存在时返回空
+ * @param throwIfNotFound 如果文件不存在，是否抛出异常，如果值为 `false`，则文件不存在时返回 `null`
  */
 export function readText(path: string, throwIfNotFound?: boolean): string
 
@@ -584,7 +584,7 @@ export function moveLink(src: string, dest: string, overwrite = true) {
 }
 
 /**
- * 获取指定路径区分大小写的实际路径，如果地址不存在则返回空
+ * 获取指定路径区分大小写的实际路径，如果地址不存在则返回 `null`
  * @param path 原路径
  */
 export function getRealPath(path: string) {

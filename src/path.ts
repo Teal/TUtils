@@ -259,7 +259,7 @@ export function containsPath(parent: string, child: string, ignoreCase = isCaseI
 }
 
 /**
- * 获取两个路径中最深的路径，如果没有公共部分则返回空
+ * 获取两个路径中最深的路径，如果没有公共部分则返回 `null`
  * @param path1 要处理的第一个路径，路径必须已规范化
  * @param path2 要处理的第二个路径，路径必须已规范化
  * @param ignoreCase 是否忽略路径的大小写
@@ -279,7 +279,7 @@ export function deepestPath(path1: string | null | undefined, path2: string | nu
 }
 
 /**
- * 获取两个路径的公共文件夹，如果没有公共部分则返回空
+ * 获取两个路径的公共文件夹，如果没有公共部分则返回 `null`
  * @param path1 要处理的第一个路径，路径必须已规范化
  * @param path2 要处理的第二个路径，路径必须已规范化
  * @param ignoreCase 是否忽略路径的大小写

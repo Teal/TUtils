@@ -336,7 +336,7 @@ export class HTTPRequest extends IncomingMessage {
 		return this._forms
 	}
 
-	/** 获取当前请求的文件，如果当前请求不包含文件则返回空数组 */
+	/** 获取当前请求的文件，如果当前请求不包含文件则返回 `null`数组 */
 	get files() {
 		const files: HTTPFile[] = []
 		for (const key in this.forms) {
