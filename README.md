@@ -78,6 +78,7 @@ const eventEmitter = require("tutils/eventEmitter")
 
 const require = require("tutils/require")
 const resolver = require("tutils/resolver")
+const jsx = require("tutils/jsx")
 const tpl = require("tutils/tpl")
 const misc = require("tutils/misc")
 ```
