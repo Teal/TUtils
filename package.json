@@ -1,7 +1,7 @@
 {
   "name": "tutils",
   "private": false,
-  "version": "2.0.1",
+  "version": "2.1.0",
   "repository": "https://github.com/Teal/TUtils",
   "description": "TUtils 提供了 200+ 个 Node.js 上常用的工具函数库，比如通配符、文件监听、网络库等",
   "license": "SEE LICENSE IN LICENSE",

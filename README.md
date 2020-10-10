@@ -128,6 +128,7 @@ const misc = require("tutils/misc")
 - 其它
 	- [require](#require)：Node require 定制
 	- [resolver](#resolver)：模块解析器
+	- [jsx](#jsx)：服务端 JSX 渲染
 	- [tpl](#tpl)：模板引擎
 	- [misc](#misc)：其它语言级别的工具函数，比如格式化日期
 
@@ -901,6 +902,16 @@ const result = await resolver.resolve("tutils", process.cwd())
 | npm 包名           | TPack-Utils 对应的函数/类 |
 | ------------------ | ------------------------- |
 | `enhanced-resolve` | `Resolver`                |
+
+#### jsx
+```jsx
+const {jsx, Fragment} = require("tutils/jsx")
+
+/** @jsx jsx */
+/** @jsxFrag Fragment */
+var div = <button id="my" disabled>Hello World</button>
+console.log(div)
+```
 
 #### tpl
 ```js
