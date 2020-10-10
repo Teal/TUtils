@@ -354,6 +354,8 @@ export namespace pathTest {
 		assert.strictEqual(path.getExt("/user/root/foo.min.js"), ".js")
 		assert.strictEqual(path.getExt("/user/root/.foo"), "")
 		assert.strictEqual(path.getExt("/user/root/.foo/"), "")
+
+		assert.strictEqual(path.getExt("/user/root/file.foo/"), "")
 	}
 
 	export function setExtTest() {
@@ -364,6 +366,8 @@ export namespace pathTest {
 		assert.strictEqual(path.setExt("/user/root/foo", ""), "/user/root/foo")
 		assert.strictEqual(path.setExt("/user/root/.foo", ".txt"), "/user/root/.foo.txt")
 		assert.strictEqual(path.setExt("/user/root/.foo/", ".txt"), "/user/root/.foo/.txt")
+
+		assert.strictEqual(path.setExt("/user/root/file.foo/", ".txt"), "/user/root/file.foo/.txt")
 	}
 
 	export function pathEqualsTest() {

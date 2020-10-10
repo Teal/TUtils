@@ -189,6 +189,9 @@ export function appendIndex(path: string, index = "_2") {
  * @example getExt(".gitignore") // ""
  */
 export function getExt(path: string) {
+	if (path.endsWith("/") || path.endsWith(sep)) {
+		return ""
+	}
 	return extname(path)
 }
 
@@ -201,7 +204,7 @@ export function getExt(path: string) {
  * @example setExt("/root/foo", ".jpg") // "/root/foo.jpg"
  */
 export function setExt(path: string, value: string) {
-	return path.substring(0, path.length - extname(path).length) + value
+	return path.substring(0, path.length - getExt(path).length) + value
 }
 
 /** 判断当前系统是否忽略路径的大小写 */
