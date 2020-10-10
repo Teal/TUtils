@@ -45,7 +45,7 @@ export function decodeHTML(value: string) {
 			case "quot": return "\""
 			case "apos": return "'"
 			case "nbsp": return "\u00A0"
-			default: return require("./data/htmlEntities.json")[entity!] || source
+			default: return (require("./htmlEntities.json") as typeof import("./htmlEntities.json"))[entity!] || source
 		}
 	})
 }
