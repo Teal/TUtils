@@ -90,6 +90,28 @@ export function isAbsoluteURL(url: string) {
 }
 
 /**
+ * 判断指定的地址是否是外部地址
+ * @param url 要判断的地址
+ * @example isExternalURL("http://example.com/foo") // true
+ */
+export function isExternalURL(url: string) {
+	return /^([\w\-]*:)?\/\//.test(url)
+}
+
+/**
+ * 如果地址是相对地址则更新基地址，否则返回原地址
+ * @param base 要使用的基地址
+ * @param url 要处理的地址
+ * @example setBaseURL("foo", "base") // "base/foo"
+ */
+export function setBaseURL(url: string, base: string) {
+	if (isAbsoluteURL(url)) {
+		return url
+	}
+	return resolveURL(base + "/", url)
+}
+
+/**
  * 替换字符串中的地址
  * @param content 要处理的内容
  * @param replacement 要替换的内容，如果是字符串，则其中的 `$&` 代表匹配的地址

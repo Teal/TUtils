@@ -307,6 +307,25 @@ export namespace urlTest {
 		assert.strictEqual(url.isAbsoluteURL("mailto:noreply@tealui.com"), true)
 	}
 
+	export function isExternalURLTest() {
+		assert.strictEqual(url.isExternalURL("http://tealui.com/"), true)
+		assert.strictEqual(url.isExternalURL("/"), false)
+		assert.strictEqual(url.isExternalURL("mailto:noreply@tealui.com"), false)
+		assert.strictEqual(url.isExternalURL("foo"), false)
+		assert.strictEqual(url.isExternalURL(""), false)
+		assert.strictEqual(url.isExternalURL("data:base64,..."), false)
+	}
+
+	export function setBaseURLTest() {
+		assert.strictEqual(url.setBaseURL("http://tealui.com/", "base"), "http://tealui.com/")
+		assert.strictEqual(url.setBaseURL("/", "base"), "/")
+		assert.strictEqual(url.setBaseURL("./foo", "base"), "base/foo")
+		assert.strictEqual(url.setBaseURL("foo", "base"), "base/foo")
+		assert.strictEqual(url.setBaseURL("foo", "base/dir"), "base/dir/foo")
+		assert.strictEqual(url.setBaseURL("data:base64,...", "base"), "data:base64,...")
+		assert.strictEqual(url.setBaseURL("mailto:noreply@tealui.com", "base"), "mailto:noreply@tealui.com")
+	}
+
 	export function replaceURLTest() {
 		assert.strictEqual(url.replaceURL("url: http://tealui.com/ is", ""), "url:  is")
 		assert.strictEqual(url.replaceURL("url: https://中国.公司 is", ""), "url:  is")
