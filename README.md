@@ -472,8 +472,12 @@ const url = require("tutils/url")
 // 地址格式化
 url.resolveURL("http://example.com", "foo") // 转绝对地址
 url.relativeURL("http://example.com", "http://example.com/foo") // 转相对地址
-path.normalizeURL("http://example.com/foo/../relative") // 规范化地址
-path.isAbsoluteURL("http://example.com/foo") // 是否是绝对地址
+url.normalizeURL("http://example.com/foo/../relative") // 规范化地址
+url.setBaseURL("foo", "base") // 设置基路径
+
+// 地址判断
+url.isAbsoluteURL("http://example.com/foo") // 是否是绝对地址
+url.isExternalURL("http://example.com/foo") // 是否是其它站点的地址
 
 // 查找并替换地址
 url.replaceURL("请点击 http://example.com 继续", url => `<a href="${url}">${url}</a>`) // "请点击 <a href="http://example.com">http://example.com</a> 继续"
