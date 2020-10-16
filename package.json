@@ -3,7 +3,7 @@
   "private": false,
   "version": "2.1.2",
   "repository": "https://github.com/Teal/TUtils",
-  "description": "TUtils 提供了 200+ 个 Node.js 上常用的工具函数库，比如通配符、文件监听、网络库等",
+  "description": "200+ well-tested helper functions & classes for Node.js, including globbing, file watcher, socket and so on | TUtils 提供了 200+ 个 Node.js 上常用的工具函数库，比如通配符、文件监听、网络库等",
   "license": "SEE LICENSE IN LICENSE",
   "author": "xuld <xuld@vip.qq.com>",
   "engines": {
