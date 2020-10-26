@@ -730,7 +730,7 @@ const json = require("tutils/json")
 
 // 读取 JSON
 json.readJSON("path.json") // 支持注释和末尾多余的逗号
-json.normalizeJSON("path.json") // 删除 JSON 字符串中的注释和末尾多余的逗号
+json.normalizeJSON("{a:1,}") // 删除 JSON 字符串中的注释和末尾多余的逗号
 
 // 写入 JSON
 json.writeJSON("path.json", {}) // 安全写入 JSON 数据
