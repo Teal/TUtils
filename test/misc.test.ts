@@ -3,6 +3,16 @@ import * as misc from "../src/misc"
 
 export namespace miscTest {
 
+	export function mergeTest() {
+		assert.strictEqual(misc.merge(1, 2), 2)
+		assert.deepStrictEqual(misc.merge({ a: 1 }, { b: 2 }), { a: 1, b: 2 })
+		assert.deepStrictEqual(misc.merge({ a: [1] }, { a: [2] }), { a: [1, 2] })
+
+		const obj = { a: null, b: 1 }
+		obj.a = obj
+		assert.strictEqual(misc.merge({a: {}}, obj).b, 1)
+	}
+
 	export function stripBOMTest() {
 		assert.deepStrictEqual(misc.stripBOM("\ufeffg"), "g")
 
@@ -23,6 +33,9 @@ export namespace miscTest {
 
 	export function concatTest() {
 		assert.deepStrictEqual(misc.concat([1, 2, 3, 4], [5]), [1, 2, 3, 4, 5])
+		assert.deepStrictEqual(misc.concat(null, null), null)
+		assert.deepStrictEqual(misc.concat([1], null), [1])
+		assert.deepStrictEqual(misc.concat(null, [1]), [1])
 	}
 
 	export function pushIfNotExistsTest() {
@@ -35,6 +48,9 @@ export namespace miscTest {
 
 	export function binarySearchTest() {
 		assert.deepStrictEqual(misc.binarySearch([1, 2, 3, 4, 5], 3), 2)
+		assert.deepStrictEqual(misc.binarySearch([1, 2, 3, 4, 5], 4), 3)
+		assert.deepStrictEqual(misc.binarySearch([1, 2, 3, 4, 5], 2), 1)
+		assert.deepStrictEqual(misc.binarySearch([1, 2, 3, 4, 5], 3.5), ~3)
 	}
 
 	export function insertSortedTest() {

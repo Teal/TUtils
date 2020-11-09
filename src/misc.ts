@@ -1,3 +1,37 @@
+
+/**
+ * 合并所有对象，如果两个对象包含同名的数组，则将这些数组合并为一个
+ * @param target 要合并的目标对象
+ * @param sources 要合并的源对象
+ * @example merge({x: [0], y: 0}, {x: [1], y: 2}) // {x: [0, 1], y: 2}
+ */
+export function merge<T, S>(target: T, ...sources: S[]) {
+	const cloned = new Map()
+	for (const source of sources) {
+		target = merge(target, source)
+	}
+	return target as T & S
+
+	function merge(target: any, source: any) {
+		if (typeof target === "object" && typeof source === "object") {
+			if (Array.isArray(target) && Array.isArray(source)) {
+				return [...target, ...source]
+			}
+			const exists = cloned.get(source)
+			if (exists !== undefined) {
+				return exists
+			}
+			const result: { [key: string]: any } = { ...target }
+			cloned.set(source, result)
+			for (const key in source) {
+				result[key] = merge(result[key], source[key])
+			}
+			return result
+		}
+		return source
+	}
+}
+
 /**
  * 删除字符串开头的 UTF-8 BOM 字符
  * @param content 要处理的字符串
