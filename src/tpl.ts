@@ -15,7 +15,6 @@ export function compileTPL(content: string, async?: boolean, path = "<stdin>", p
 	const code = compileTPLWorker(content)
 	const dir = dirname(path)
 	const Module = module.constructor as any as typeof import("module")
-	// @ts-expect-error
 	const require = Module.createRequire ? Module.createRequire(resolve(path)) : Module.createRequireFromPath(path)
 	if (async) {
 		const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor
