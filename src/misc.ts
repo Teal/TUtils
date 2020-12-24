@@ -13,6 +13,9 @@ export function merge<T, S>(target: T, ...sources: S[]) {
 	return target as T & S
 
 	function merge(target: any, source: any) {
+		if (source == undefined) {
+			return target
+		}
 		if (typeof target === "object" && typeof source === "object") {
 			if (Array.isArray(target) && Array.isArray(source)) {
 				return [...target, ...source]
