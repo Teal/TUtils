@@ -566,9 +566,9 @@ function parseCharset(contentType: string | undefined) {
  * @param body 要解析的原始数据
  * @param boundary 请求头标记的分隔符
  */
-function parseMultipart(body: Buffer, boundary: string) {
+export function parseMultipart(body: Buffer, boundary: string) {
 	const result: { [key: string]: string | HTTPFile | (string | HTTPFile)[] } = Object.create(null)
-	const boundaryBytes = Buffer.from(boundary)
+	const boundaryBytes = Buffer.from("--" + boundary)
 	// 跳过首行
 	let index = body.indexOf(boundaryBytes)
 	if (index < 0) {
@@ -705,8 +705,78 @@ export class HTTPFile {
 
 }
 
+/**
+ * 解析请求的数据
+ * @param request 请求数据
+ * @param maxAllowedContentLength 最大允许的内容长度
+ */
+export function parseBodyAsBuffer(request: IncomingMessage, maxAllowedContentLength?: number) {
+	return new Promise<Buffer>((resolve, reject) => {
+		const bodyChunks: Buffer[] = []
+		let size = 0
+		request.on("data", (chunk: Buffer) => {
+			size += chunk.length
+			if (maxAllowedContentLength !== undefined && size > maxAllowedContentLength) {
+				bodyChunks.length = 0
+				reject(`Request content length exceeds the limit`)
+				return
+			}
+			bodyChunks.push(chunk)
+		})
+		request.on("end", () => {
+			resolve(Buffer.concat(bodyChunks, size))
+		})
+	})
+}
+
+/**
+ * 解析请求的数据为文本
+ * @param request 请求数据
+ * @param maxAllowedContentLength 最大允许的内容长度
+ */
+export async function parseBodyAsText(request: IncomingMessage, maxAllowedContentLength?: number) {
+	return new Promise<string>((resolve, reject) => {
+		let body = ""
+		let size = 0
+		request.on("data", (chunk: Buffer) => {
+			if (maxAllowedContentLength !== undefined && (size += chunk.length) > maxAllowedContentLength) {
+				body = ""
+				reject(`Request content length exceeds the limit`)
+				return
+			}
+			body += chunk.toString()
+		})
+		request.on("end", () => {
+			resolve(body)
+		})
+	})
+}
+
+/**
+ * 解析请求的数据为 JSON
+ * @param request 请求数据
+ * @param maxAllowedContentLength 最大允许的内容长度
+ */
+export async function parseBodyAsJSON(request: IncomingMessage, maxAllowedContentLength?: number) {
+	return JSON.parse(await parseBodyAsText(request, maxAllowedContentLength))
+}
+
+/**
+ * 解析含表单的请求数据
+ * @param request 请求数据
+ * @param maxAllowedContentLength 最大允许的内容长度
+ */
+export async function parseBodyAsMultipartForm(request: IncomingMessage, maxAllowedContentLength?: number) {
+	const boundary = /;\s*boundary=([^;]*)/.exec(request.headers["content-type"])
+	if (!boundary) {
+		return null
+	}
+	const buffer = await parseBodyAsBuffer(request, maxAllowedContentLength)
+	return parseMultipart(buffer, boundary[1])
+}
+
 /** 解析 HTTP Cookies 头 */
-function parseCookies(value: string | undefined) {
+export function parseCookies(value: string | undefined) {
 	const cookies = Object.create(null)
 	if (value) {
 		for (const cookie of value.split(/\s*;\s*/)) {

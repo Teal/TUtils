@@ -254,7 +254,7 @@ function parseCharset(contentType: string | undefined) {
 
 /** 格式化多段数据 */
 function stringifyMultipart(data: any, boundary: string) {
-	const boundaryBuffer = Buffer.from(boundary)
+	const boundaryBuffer = Buffer.from("--" + boundary)
 	const crlf = Buffer.from([13, 10])
 	const buffers = []
 	let size = 0
