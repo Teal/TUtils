@@ -45,6 +45,7 @@ const mfs = require("tutils/memoryFileSystem")
 const watcher = require("tutils/fileSystemWatcher")
 const matcher = require("tutils/matcher")
 const path = require("tutils/path")
+const zipFile = require("tutils/zipFile")
 
 const request = require("tutils/request")
 const server = require("tutils/httpServer")
@@ -96,6 +97,7 @@ const misc = require("tutils/misc")
 	- [fileSystemWatcher](#filesystemwatcher)：监听
 	- [matcher](#matcher)：通配符
 	- [path](#path)：路径计算
+	- [zipFile](#zipFile)：Zip 压缩/解压(v2.1.6 新增)
 - 网络
 	- [request](#request)：发送 HTTP/HTTPS 请求
 	- [httpServer](#httpserver)：HTTP 服务器封装
@@ -368,6 +370,28 @@ path.commonDir("/root/foo", "/root/foo/goo") // 获取公共文件夹
 | `normalize-path`   | `normalizePath`      |
 | `path-is-inside`   | `containsPath`       |
 | `contains-path`    | `containsPath`       |
+
+#### zipFile(v2.1.6 新增)
+快速压缩、解压 Zip 文件。支持局部解压及更新部分文件。
+
+```js
+const zipFile = require("tutils/zipFile")
+
+// 快速压缩、解压
+zipFile.compressFolder("dir") // 快速压缩 dir 文件夹中的内容为 dir.zip
+zipFile.extractZip("dir.zip") // 快速将 dir.zip 解压到 dir 文件夹
+
+// 更复杂操作
+const file = zipFile.ZipFile.fromBuffer(buffer)
+file.addFile("t.txt") // 添加文件
+const result = file.compress() // 重新压缩
+```
+
+| npm 包名      | TUtils 对应的函数/类 |
+| ------------- | -------------------- |
+| `unzip`       | `extractZip`         |
+| `adm-zip`     | `ZipFile`            |
+| `extract-zip` | `extractZip`         |
 
 ### 网络
 
