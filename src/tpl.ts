@@ -15,7 +15,7 @@ export function compileTPL(content: string, async?: boolean, path = "<stdin>", p
 	const code = compileTPLWorker(content)
 	const dir = dirname(path)
 	const Module = module.constructor as any as typeof import("module")
-	const require = Module.createRequire ? Module.createRequire(resolve(path)) : Module.createRequireFromPath(path)
+	const require = Module.createRequire ? Module.createRequire(resolve(path)) : Module["createRequireFromPath"](path)
 	if (async) {
 		const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor
 		return new AsyncFunction("require", "__dirname", "__filename", "__escape__", paramName, code).bind(null, require, dir, path, escape)

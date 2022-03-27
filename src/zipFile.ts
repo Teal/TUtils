@@ -47,7 +47,7 @@ export class ZipFile {
 			const entry = this.entries[i]
 			const fileName = Buffer.from(entry.fileName ?? "")
 			const compressedData = entry.compress(password)
-			const comment = entry.comment ? Buffer.from(entry.comment, 0, 0xffff) : undefined
+			const comment = entry.comment ? Buffer.from(entry.comment as any, 0, 0xffff) : undefined
 			const size = entry.orginalSize ?? (entry.data ? entry.data.length : 0)
 			const zip64 = compressedData.length >= 0xffffffff || size >= 0xfffffff || offset >= 0xfffffffff
 			const version = entry.version ?? (entry.compressionMethod === ZipCompressionMethod.stored ? 10 : 20)
@@ -77,7 +77,7 @@ export class ZipFile {
 			}
 		}
 		const cenOffset = offset
-		const comment = this.comment ? Buffer.from(this.comment, 0, 0xffff) : undefined
+		const comment = this.comment ? Buffer.from(this.comment as any, 0, 0xffff) : undefined
 		const zip64 = this.entries.length >= 0xffff || offset >= 0xffffffff
 		// 第二步：写入文件区
 		const buffer = Buffer.allocUnsafe(offset + cenSize + (zip64 ? 64 : 0) + 22 + (comment ? comment.length : 0))

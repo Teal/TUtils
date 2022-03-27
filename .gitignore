@@ -1,11 +1,13 @@
 # 前端项目
 
+## 私有文件
+__*
+
 ## 生成文件
-_*/
 dist/
 package-lock.json
+pnpm-lock.yaml
 yarn.lock
-shrinkwrap.yaml
 
 ## Node.js
 node_modules/

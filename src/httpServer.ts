@@ -46,7 +46,7 @@ export class HTTPServer {
 				const https = require("https") as typeof import("https")
 				server = https.createServer(options, this.handleRequest as any)
 			} else {
-				server = createServer(options, this.handleRequest as any)
+				server = createServer(options, this.handleRequest as any) as any
 			}
 		}
 		// 根据用户的选项动态继承类
