@@ -476,9 +476,10 @@ export class MemoryFileSystem extends FileSystem {
 	 * @param src 要复制的源路径
 	 * @param dest 要复制的目标路径
 	 * @param overwrite 是否覆盖已有的目标
+	 * @param preserveLinks 是否保留链接
 	 * @returns 返回已复制的文件数
 	 */
-	async copyDir(src: string, dest: string, overwrite = true) {
+	async copyDir(src: string, dest: string, overwrite = true, preserveLinks?: boolean) {
 		await this.createDir(dest)
 		const entries = await this.readDir(src, true)
 		let count = 0
@@ -488,7 +489,7 @@ export class MemoryFileSystem extends FileSystem {
 			const toChild = join(dest, entry.name)
 			try {
 				if (entry.isDirectory()) {
-					count += await this.copyDir(fromChild, toChild, overwrite)
+					count += await this.copyDir(fromChild, toChild, overwrite, preserveLinks)
 				} else {
 					if (await this.copyFile(fromChild, toChild, overwrite)) {
 						count++
@@ -520,9 +521,10 @@ export class MemoryFileSystem extends FileSystem {
 	 * @param src 要移动的源路径
 	 * @param dest 要移动的目标路径
 	 * @param overwrite 是否允许覆盖现有的目标
+	 * @param preserveLinks 是否保留链接
 	 * @returns 返回已移动的文件数
 	 */
-	async moveDir(src: string, dest: string, overwrite = true) {
+	async moveDir(src: string, dest: string, overwrite = true, preserveLinks?: boolean) {
 		await this.createDir(dest)
 		const entries = await this.readDir(src, true)
 		let count = 0
@@ -532,7 +534,7 @@ export class MemoryFileSystem extends FileSystem {
 			const toChild = join(dest, entry.name)
 			try {
 				if (entry.isDirectory()) {
-					count += await this.moveDir(fromChild, toChild, overwrite)
+					count += await this.moveDir(fromChild, toChild, overwrite, preserveLinks)
 				} else {
 					if (await this.moveFile(fromChild, toChild, overwrite)) {
 						count++

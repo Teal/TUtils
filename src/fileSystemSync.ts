@@ -239,12 +239,14 @@ export function walk(path: string, options: WalkOptions, /**@internal */ _stats?
  * @param pattern 要匹配的模式
  * @param callback 遍历的回调函数
  * @param baseDir 查找的基文件夹路径
+ * @param followLinks 是否展开链接，默认 `true`
  */
-export function walkGlob(pattern: Pattern, callback: (path: string) => any, baseDir?: string) {
+export function walkGlob(pattern: Pattern, callback: (path: string) => any, baseDir?: string, followLinks?: boolean) {
 	const matcher = new Matcher(pattern, baseDir)
 	const excludeMatcher = matcher.excludeMatcher
 	for (const base of matcher.getBases()) {
 		walk(base, {
+			follow: followLinks,
 			error(e) {
 				throw e
 			},
@@ -262,13 +264,14 @@ export function walkGlob(pattern: Pattern, callback: (path: string) => any, base
  * 查找匹配指定模式的所有文件
  * @param pattern 要匹配的模式
  * @param baseDir 查找的基文件夹路径
+ * @param followLinks 是否展开链接，默认 `true`
  * @returns 返回所有匹配文件的路径
  */
-export function glob(pattern: Pattern, baseDir?: string) {
+export function glob(pattern: Pattern, baseDir?: string, followLinks?: boolean) {
 	const files: string[] = []
 	walkGlob(pattern, path => {
 		files.push(path)
-	}, baseDir)
+	}, baseDir, followLinks)
 	return files
 }
 
@@ -440,8 +443,9 @@ export function readLink(path: string) {
  * @param search 搜索的源
  * @param baseDir 搜索的根目录
  * @param limit 限制匹配的数目
+ * @param followLinks 是否展开链接，默认 `false`
  */
-export function searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number) {
+export function searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number, followLinks?: boolean) {
 	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
 	const result: SearchTextResult[] = []
 	walkGlob(pattern, async path => {
@@ -460,7 +464,7 @@ export function searchAllText(pattern: string, search: string | RegExp, baseDir?
 				content,
 			})
 		}
-	}, baseDir)
+	}, baseDir, !!followLinks)
 	return result
 }
 
@@ -469,9 +473,10 @@ export function searchAllText(pattern: string, search: string | RegExp, baseDir?
  * @param pattern 要搜索的通配符
  * @param search 替换的源
  * @param replacer 替换的目标
+ * @param followLinks 是否展开链接，默认 `false`
  * @returns 返回受影响的文件数
  */
-export function replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string) {
+export function replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string, followLinks?: boolean) {
 	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
 	let result = 0
 	walkGlob(pattern, async path => {
@@ -481,7 +486,7 @@ export function replaceAllText(pattern: string, search: string | RegExp, replace
 			result++
 			writeFile(path, repalced)
 		}
-	}, baseDir)
+	}, baseDir, !!followLinks)
 	return result
 }
 
@@ -490,9 +495,10 @@ export function replaceAllText(pattern: string, search: string | RegExp, replace
  * @param src 要复制的源路径
  * @param dest 要复制的目标路径
  * @param overwrite 是否覆盖已有的目标
+ * @param preserveLinks 是否保留链接
  * @returns 返回已复制的文件数
  */
-export function copyDir(src: string, dest: string, overwrite = true) {
+export function copyDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
 	createDir(dest)
 	const entries = readdirSync(src, { withFileTypes: true })
 	let count = 0
@@ -503,7 +509,7 @@ export function copyDir(src: string, dest: string, overwrite = true) {
 		try {
 			if (entry.isDirectory()) {
 				count += copyDir(fromChild, toChild, overwrite)
-			} else if (entry.isSymbolicLink()) {
+			} else if (preserveLinks && entry.isSymbolicLink()) {
 				if (copyLink(fromChild, toChild, overwrite)) {
 					count++
 				}
@@ -569,9 +575,10 @@ export function copyLink(src: string, dest: string, overwrite = true) {
  * @param src 要移动的源路径
  * @param dest 要移动的目标路径
  * @param overwrite 是否允许覆盖现有的目标
+ * @param preserveLinks 是否保留链接
  * @returns 返回已移动的文件数
  */
-export function moveDir(src: string, dest: string, overwrite = true): number {
+export function moveDir(src: string, dest: string, overwrite = true, preserveLinks = true): number {
 	createDir(dest)
 	const entries = readdirSync(src, { withFileTypes: true })
 	let count = 0
@@ -582,7 +589,7 @@ export function moveDir(src: string, dest: string, overwrite = true): number {
 		try {
 			if (entry.isDirectory()) {
 				count += moveDir(fromChild, toChild, overwrite)
-			} else if (entry.isSymbolicLink()) {
+			} else if (preserveLinks && entry.isSymbolicLink()) {
 				if (moveLink(fromChild, toChild, overwrite)) {
 					count++
 				}

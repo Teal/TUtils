@@ -351,11 +351,13 @@ export class FileSystem {
 	 * @param pattern 要匹配的模式
 	 * @param callback 遍历的回调函数
 	 * @param baseDir 查找的基文件夹路径
+	 * @param followLinks 是否展开链接，默认 `true`
 	 */
-	walkGlob(pattern: Pattern, callback: (path: string) => any, baseDir?: string) {
+	walkGlob(pattern: Pattern, callback: (path: string) => any, baseDir?: string, followLinks?: boolean) {
 		const matcher = new Matcher(pattern, baseDir, this.isCaseInsensitive)
 		const excludeMatcher = matcher.excludeMatcher
 		return Promise.all(matcher.getBases().map(base => this.walk(base, {
+			follow: followLinks,
 			error(e) {
 				throw e
 			},
@@ -372,13 +374,14 @@ export class FileSystem {
 	 * 查找匹配指定模式的所有文件
 	 * @param pattern 要匹配的模式
 	 * @param baseDir 查找的基文件夹路径
+	 * @param followLinks 是否展开链接，默认 `true`
 	 * @returns 返回所有匹配文件的路径
 	 */
-	async glob(pattern: Pattern, baseDir?: string) {
+	async glob(pattern: Pattern, baseDir?: string, followLinks?: boolean) {
 		const files: string[] = []
 		await this.walkGlob(pattern, path => {
 			files.push(path)
-		}, baseDir)
+		}, baseDir, followLinks)
 		return files
 	}
 
@@ -620,8 +623,9 @@ export class FileSystem {
 	 * @param search 搜索的源
 	 * @param baseDir 搜索的根目录
 	 * @param limit 限制匹配的数目
+	 * @param followLinks 是否展开链接，默认 `false`
 	 */
-	async searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number) {
+	async searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number, followLinks?: boolean) {
 		const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
 		const result: SearchTextResult[] = []
 		await this.walkGlob(pattern, async path => {
@@ -640,7 +644,7 @@ export class FileSystem {
 					content,
 				})
 			}
-		}, baseDir)
+		}, baseDir, !!followLinks)
 		return result
 	}
 
@@ -649,9 +653,10 @@ export class FileSystem {
 	 * @param pattern 要搜索的通配符
 	 * @param search 替换的源
 	 * @param replacer 替换的目标
+	 * @param followLinks 是否展开链接，默认 `false`
 	 * @returns 返回受影响的文件数
 	 */
-	async replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string) {
+	async replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string, followLinks?: boolean) {
 		const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
 		let result = 0
 		await this.walkGlob(pattern, async path => {
@@ -661,7 +666,7 @@ export class FileSystem {
 				result++
 				await this.writeFile(path, repalced)
 			}
-		}, baseDir)
+		}, baseDir, !!followLinks)
 		return result
 	}
 
@@ -670,9 +675,10 @@ export class FileSystem {
 	 * @param src 要复制的源路径
 	 * @param dest 要复制的目标路径
 	 * @param overwrite 是否覆盖已有的目标
+	 * @param preserveLinks 是否保留链接
 	 * @returns 返回已复制的文件数
 	 */
-	copyDir(src: string, dest: string, overwrite = true) {
+	copyDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
 		return new Promise<number>((resolve, reject) => {
 			this.createDir(dest).then(() => {
 				safeCall(readdir, [src, { withFileTypes: true }], (error, entries: Dirent[]) => {
@@ -688,7 +694,7 @@ export class FileSystem {
 								const toChild = join(dest, entry.name)
 								if (entry.isDirectory()) {
 									promise = this.copyDir(fromChild, toChild, overwrite)
-								} else if (entry.isSymbolicLink()) {
+								} else if (preserveLinks && entry.isSymbolicLink()) {
 									promise = this.copyLink(fromChild, toChild, overwrite)
 								} else {
 									promise = this.copyFile(fromChild, toChild, overwrite)
@@ -774,7 +780,7 @@ export class FileSystem {
 	 * @param overwrite 是否允许覆盖现有的目标
 	 * @returns 返回已移动的文件数
 	 */
-	moveDir(src: string, dest: string, overwrite = true) {
+	moveDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
 		return new Promise<number>((resolve, reject) => {
 			this.createDir(dest).then(() => {
 				safeCall(readdir, [src, { withFileTypes: true }], (error, entries: Dirent[]) => {
@@ -790,7 +796,7 @@ export class FileSystem {
 								let promise: Promise<boolean | number>
 								if (entry.isDirectory()) {
 									promise = this.moveDir(fromChild, toChild, overwrite)
-								} else if (entry.isSymbolicLink()) {
+								} else if (preserveLinks && entry.isSymbolicLink()) {
 									promise = this.moveLink(fromChild, toChild, overwrite)
 								} else {
 									promise = this.moveFile(fromChild, toChild, overwrite)
