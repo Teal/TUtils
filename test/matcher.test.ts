@@ -109,6 +109,8 @@ export namespace matcherTest {
 		assert.strictEqual(matcher.match("{{", "{{"), true)
 		assert.strictEqual(matcher.match("{xy", "{x{y,}"), true)
 		assert.strictEqual(matcher.match("{x{,", "{x{,"), true)
+		
+		assert.strictEqual(matcher.match("a", "a;b"), true)
 	}
 
 	export namespace micromatchTest {

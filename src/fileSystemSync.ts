@@ -1,7 +1,8 @@
 import { accessSync, appendFileSync, constants, copyFileSync, Dirent, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, renameSync, rmdirSync, Stats, statSync, symlinkSync, unlinkSync, writeFileSync } from "fs"
 import { dirname, join, relative, resolve as resolvePath, sep } from "path"
-import { WalkOptions } from "./fileSystem"
+import { SearchTextResult, WalkOptions } from "./fileSystem"
 import { Matcher, Pattern } from "./matcher"
+import { escapeRegExp, replaceString } from "./misc"
 import { appendIndex, joinPath } from "./path"
 
 /**
@@ -234,26 +235,40 @@ export function walk(path: string, options: WalkOptions, /**@internal */ _stats?
 }
 
 /**
+ * 遍历通配符匹配的所有文件
+ * @param pattern 要匹配的模式
+ * @param callback 遍历的回调函数
+ * @param baseDir 查找的基文件夹路径
+ */
+export function walkGlob(pattern: Pattern, callback: (path: string) => any, baseDir?: string) {
+	const matcher = new Matcher(pattern, baseDir)
+	const excludeMatcher = matcher.excludeMatcher
+	for (const base of matcher.getBases()) {
+		walk(base, {
+			error(e) {
+				throw e
+			},
+			dir: excludeMatcher ? path => !excludeMatcher.test(path) : undefined,
+			file(path) {
+				if (matcher.test(path)) {
+					callback(path)
+				}
+			}
+		})
+	}
+}
+
+/**
  * 查找匹配指定模式的所有文件
  * @param pattern 要匹配的模式
  * @param baseDir 查找的基文件夹路径
  * @returns 返回所有匹配文件的路径
  */
 export function glob(pattern: Pattern, baseDir?: string) {
-	const matcher = new Matcher(pattern, baseDir)
-	const excludeMatcher = matcher.excludeMatcher
 	const files: string[] = []
-	matcher.getBases().forEach(base => walk(base, {
-		error(e) {
-			throw e
-		},
-		dir: excludeMatcher ? path => !excludeMatcher.test(path) : undefined,
-		file(path) {
-			if (matcher.test(path)) {
-				files.push(path)
-			}
-		}
-	}))
+	walkGlob(pattern, path => {
+		files.push(path)
+	}, baseDir)
 	return files
 }
 
@@ -417,6 +432,57 @@ export function createLink(path: string, target: string, overwrite = true): bool
  */
 export function readLink(path: string) {
 	return readlinkSync(path)
+}
+
+/**
+ * 搜索匹配的文件
+ * @param pattern 要搜索的通配符
+ * @param search 搜索的源
+ * @param baseDir 搜索的根目录
+ * @param limit 限制匹配的数目
+ */
+export function searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number) {
+	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+	const result: SearchTextResult[] = []
+	walkGlob(pattern, async path => {
+		if (result.length === limit) {
+			return
+		}
+		const content = readText(path)
+		for (const match of content.matchAll(regexp)) {
+			if (result.length === limit) {
+				return
+			}
+			result.push({
+				path,
+				start: match.index,
+				end: match.index + match[0].length,
+				content,
+			})
+		}
+	}, baseDir)
+	return result
+}
+
+/**
+ * 替换匹配的文件
+ * @param pattern 要搜索的通配符
+ * @param search 替换的源
+ * @param replacer 替换的目标
+ * @returns 返回受影响的文件数
+ */
+export function replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string) {
+	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+	let result = 0
+	walkGlob(pattern, async path => {
+		const content = readText(path)
+		const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
+		if (repalced !== null) {
+			result++
+			writeFile(path, repalced)
+		}
+	}, baseDir)
+	return result
 }
 
 /**

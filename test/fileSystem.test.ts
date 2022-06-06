@@ -355,6 +355,32 @@ export namespace fileSystemTest {
 		}, { code: "ENOENT" })
 	}
 
+	export async function searchAllTextTest() {
+		assert.deepStrictEqual(await fs.searchAllText("f3.txt", "f3"), [
+			{
+				path: "dir/sub1/f3.txt",
+				start: 0,
+				end: 2,
+				content: "f3.txt"
+			}
+		])
+		assert.deepStrictEqual(await fs.searchAllText("f4.txt", /F(\d+)/ig), [
+			{
+				path: "dir/sub1/f4.txt",
+				start: 0,
+				end: 2,
+				content: "f4.txt"
+			}
+		])
+	}
+
+	export async function replaceAllTextTest() {
+		assert.strictEqual(await fs.replaceAllText("f3.txt", "f3", "$&"), 1)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
+		assert.strictEqual(await fs.replaceAllText("f4.txt", /F(\d+)/ig, "$1"), 1)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+	}
+
 	export async function copyDirTest() {
 		assert.strictEqual(await fs.copyDir("dir", "foo/copydir"), 3)
 		assert.strictEqual(fsSync.readFileSync("foo/copydir/sub1/f3.txt", "utf-8"), "f3.txt")

@@ -1,6 +1,7 @@
 import { access, appendFile, constants, copyFile, createReadStream, createWriteStream, Dirent, link, lstat, mkdir, mkdtemp, readdir, readFile, readlink, realpath, rename, rmdir, stat, Stats, symlink, unlink, writeFile } from "fs"
 import { dirname, join, relative, resolve as resolvePath, sep } from "path"
 import { Matcher, Pattern } from "./matcher"
+import { escapeRegExp, replaceString } from "./misc"
 import { appendIndex, isCaseInsensitive, joinPath } from "./path"
 
 /** 表示一个文件系统 */
@@ -346,26 +347,38 @@ export class FileSystem {
 	}
 
 	/**
+	 * 遍历通配符匹配的所有文件
+	 * @param pattern 要匹配的模式
+	 * @param callback 遍历的回调函数
+	 * @param baseDir 查找的基文件夹路径
+	 */
+	walkGlob(pattern: Pattern, callback: (path: string) => any, baseDir?: string) {
+		const matcher = new Matcher(pattern, baseDir, this.isCaseInsensitive)
+		const excludeMatcher = matcher.excludeMatcher
+		return Promise.all(matcher.getBases().map(base => this.walk(base, {
+			error(e) {
+				throw e
+			},
+			dir: excludeMatcher ? path => !excludeMatcher.test(path) : undefined,
+			async file(path) {
+				if (matcher.test(path)) {
+					await callback(path)
+				}
+			}
+		})))
+	}
+
+	/**
 	 * 查找匹配指定模式的所有文件
 	 * @param pattern 要匹配的模式
 	 * @param baseDir 查找的基文件夹路径
 	 * @returns 返回所有匹配文件的路径
 	 */
 	async glob(pattern: Pattern, baseDir?: string) {
-		const matcher = new Matcher(pattern, baseDir, this.isCaseInsensitive)
-		const excludeMatcher = matcher.excludeMatcher
 		const files: string[] = []
-		await Promise.all(matcher.getBases().map(base => this.walk(base, {
-			error(e) {
-				throw e
-			},
-			dir: excludeMatcher ? path => !excludeMatcher.test(path) : undefined,
-			file(path) {
-				if (matcher.test(path)) {
-					files.push(path)
-				}
-			}
-		})))
+		await this.walkGlob(pattern, path => {
+			files.push(path)
+		}, baseDir)
 		return files
 	}
 
@@ -599,6 +612,57 @@ export class FileSystem {
 	 */
 	createWriteStream(path: string, options?: Parameters<typeof createWriteStream>[1]) {
 		return createWriteStream(path, options)
+	}
+
+	/**
+	 * 搜索匹配的文件
+	 * @param pattern 要搜索的通配符
+	 * @param search 搜索的源
+	 * @param baseDir 搜索的根目录
+	 * @param limit 限制匹配的数目
+	 */
+	async searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number) {
+		const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+		const result: SearchTextResult[] = []
+		await this.walkGlob(pattern, async path => {
+			if (result.length === limit) {
+				return
+			}
+			const content = await this.readText(path)
+			for (const match of content.matchAll(regexp)) {
+				if (result.length === limit) {
+					return
+				}
+				result.push({
+					path,
+					start: match.index,
+					end: match.index + match[0].length,
+					content,
+				})
+			}
+		}, baseDir)
+		return result
+	}
+
+	/**
+	 * 替换匹配的文件
+	 * @param pattern 要搜索的通配符
+	 * @param search 替换的源
+	 * @param replacer 替换的目标
+	 * @returns 返回受影响的文件数
+	 */
+	async replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string) {
+		const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+		let result = 0
+		await this.walkGlob(pattern, async path => {
+			const content = await this.readText(path)
+			const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
+			if (repalced !== null) {
+				result++
+				await this.writeFile(path, repalced)
+			}
+		}, baseDir)
+		return result
 	}
 
 	/**
@@ -869,6 +933,18 @@ export interface WalkOptions {
 	 * @param stats 文件的属性
 	 */
 	other?(path: string, stats: Dirent | Stats): any
+}
+
+/** 表示一个搜索结果 */
+export interface SearchTextResult {
+	/** 文件路径 */
+	path: string
+	/** 文件中匹配结果的开始索引 */
+	start: number
+	/** 文件中匹配结果的结束索引 */
+	end: number
+	/** 文件源码 */
+	content: string
 }
 
 /** 安全调用系统 IO 函数，如果出现 EMFILE 错误则自动延时 */

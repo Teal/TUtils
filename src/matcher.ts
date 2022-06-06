@@ -47,7 +47,12 @@ export class Matcher {
 			if (pattern.charCodeAt(0) === 33 /*!*/) {
 				this.exclude(pattern.substring(1))
 			} else {
-				this._addPattern(globToRegExp(pattern, this))
+				const regexp = globToRegExp(pattern, this)
+				this._addPattern(regexp)
+				if (regexp.rest) {
+					this.include(regexp.rest)
+					delete regexp.rest
+				}
 			}
 		} else if (Array.isArray(pattern)) {
 			for (const item of pattern) {
@@ -195,6 +200,7 @@ export class Matcher {
  * - `{abc,xyz}`: 匹配大括号中的任一种模式
  * - `\`: 表示转义字符，如 `\[` 表示 `[` 按普通字符处理
  * - `!xyz`：如果通配符以 `!` 开头，表示排除匹配的项，注意如果排除了父文件夹，出于性能考虑，无法重新包含其中的子文件
+ * - `;`: 分割多个通配符
  *
  * `*` 和 `**` 的区别在于 `**` 可以匹配任意级文件夹，而 `*` 只能匹配一级，
  * 但如果通配符中没有 `/`（末尾的除外），则通配符只需匹配文件名部分
@@ -286,17 +292,18 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 	let baseEnd = 0
 	let hasEscape = false
 	const end = glob.length - 1
-	for (let i = 0; i <= end; i++) {
-		const char = glob.charCodeAt(i)
+	let index = 0
+	outer: for (; index <= end; index++) {
+		const char = glob.charCodeAt(index)
 		switch (char) {
 			case 46 /*.*/:
 				// 仅处理开头的 ./ 和 ../
 				if (!regexp) {
 					// 跳过开头的 ./
-					if (glob.charCodeAt(i + 1) === 47 /*/*/) {
-						baseStart = i + 2
-						i++
-						if (i < end) {
+					if (glob.charCodeAt(index + 1) === 47 /*/*/) {
+						baseStart = index + 2
+						index++
+						if (index < end) {
 							hasSlash = true
 						} else {
 							endsWithSlash = true
@@ -304,13 +311,13 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 						break
 					}
 					// 绝对路径模式：处理开头的 ../
-					if (base && glob.charCodeAt(i + 1) === 46 /*.*/ && glob.charCodeAt(i + 2) === 47 /*/*/) {
-						baseStart = i + 3
+					if (base && glob.charCodeAt(index + 1) === 46 /*.*/ && glob.charCodeAt(index + 2) === 47 /*/*/) {
+						baseStart = index + 3
 						const newBase = getDir(base)
 						if (newBase.length !== base.length) {
 							base = newBase
-							i += 2
-							if (i < end) {
+							index += 2
+							if (index < end) {
 								hasSlash = true
 							} else {
 								endsWithSlash = true
@@ -323,9 +330,9 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 				break
 			case 47 /*/*/:
 				if (!hasGlob) {
-					baseEnd = i
+					baseEnd = index
 				}
-				if (i < end) {
+				if (index < end) {
 					hasSlash = true
 				} else {
 					endsWithSlash = true
@@ -334,21 +341,21 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 				break
 			case 42 /***/:
 				hasGlob = true
-				const isStart = i === 0 || glob.charCodeAt(i - 1) === 47 /*/*/
+				const isStart = index === 0 || glob.charCodeAt(index - 1) === 47 /*/*/
 				// **
-				if (glob.charCodeAt(i + 1) === 42 /***/) {
-					i++
+				if (glob.charCodeAt(index + 1) === 42 /***/) {
+					index++
 					// 将 p** 翻译为 p* 或 p*/**
 					if (!isStart) regexp += `[^${slash}]*${slash}?`
 					regexp += `(?:(?!\\.)[^${slash}]*${slash})*`
-					if (glob.charCodeAt(i + 1) === 47 /*/*/) {
-						i++
-						if (i < end) {
+					if (glob.charCodeAt(index + 1) === 47 /*/*/) {
+						index++
+						if (index < end) {
 							hasSlash = true
 						} else {
 							endsWithSlash = true
 						}
-					} else if (i < end) {
+					} else if (index < end) {
 						// 将 **p 翻译为 **/*p
 						regexp += `(?!\\.)[^${slash}]*`
 					} else {
@@ -356,21 +363,21 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 					}
 				} else {
 					// 如果是 /*/ 则 * 至少需匹配一个字符
-					const isEnd = i === end || glob.charCodeAt(i + 1) === 47 /*/*/
+					const isEnd = index === end || glob.charCodeAt(index + 1) === 47 /*/*/
 					regexp += `${isStart ? "(?!\\.)" : ""}[^${slash}]${isStart && isEnd ? "+" : "*"}`
 				}
 				break
 			case 63 /*?*/:
 				hasGlob = true
-				regexp += `[^${slash}${i === 0 || glob.charCodeAt(i - 1) === 47 /*/*/ ? "\\." : ""}]`
+				regexp += `[^${slash}${index === 0 || glob.charCodeAt(index - 1) === 47 /*/*/ ? "\\." : ""}]`
 				break
 			case 92 /*\*/:
 				// Windows: 如果通配符是绝对路径，则 \ 作路径分隔符处理
 				if (isAbsoluteGlob && sep === "\\") {
 					if (!hasGlob) {
-						baseEnd = i
+						baseEnd = index
 					}
-					if (i < end) {
+					if (index < end) {
 						hasSlash = true
 					} else {
 						endsWithSlash = true
@@ -379,22 +386,22 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 					break
 				}
 				hasEscape = true
-				regexp += escapeRegExp(glob.charCodeAt(++i))
+				regexp += escapeRegExp(glob.charCodeAt(++index))
 				break
 			case 91 /*[*/:
 				if (!isAbsoluteGlob) {
-					const classes = tryParseClasses(glob, i)
+					const classes = tryParseClasses(glob, index)
 					if (classes) {
 						hasGlob = true
 						regexp += classes[0]
-						i = classes[1]
+						index = classes[1]
 						break
 					}
 				}
 				regexp += "\\["
 				break
 			case 123 /*{*/:
-				if (!isAbsoluteGlob && findCloseBrace(glob, i) >= 0) {
+				if (!isAbsoluteGlob && findCloseBrace(glob, index) >= 0) {
 					hasGlob = true
 					braceCount++
 					regexp += "(?:"
@@ -417,6 +424,8 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 				}
 				regexp += "\\}"
 				break
+			case 59 /*;*/:
+				break outer
 			default:
 				regexp += escapeRegExp(char)
 				break
@@ -456,8 +465,13 @@ function globToRegExp(glob: string, options: Pick<Matcher, "baseDir" | "ignoreCa
 		base += appendBase
 	}
 	// 编译正则实例
-	const result = new RegExp(regexp, options.ignoreCase ? "i" : "") as Partial<ResolvedPattern> as ResolvedPattern
+	const result = new RegExp(regexp, options.ignoreCase ? "i" : "") as Partial<ResolvedPattern> as ResolvedPattern & { rest?: string }
 	result.base = base
+	if (index !== end) {
+		// 跳过紧跟的空格
+		while (glob.charCodeAt(++index) === 32 /* */) { }
+		result.rest = glob.substring(index)
+	}
 	return result
 }
 

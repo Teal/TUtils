@@ -10,7 +10,7 @@ export namespace miscTest {
 
 		const obj = { a: null, b: 1 }
 		obj.a = obj
-		assert.strictEqual(misc.merge({a: {}}, obj).b, 1)
+		assert.strictEqual(misc.merge({ a: {} }, obj).b, 1)
 	}
 
 	export function stripBOMTest() {
@@ -22,6 +22,13 @@ export namespace miscTest {
 
 	export function capitalizeTest() {
 		assert.strictEqual(misc.capitalize("qwert"), "Qwert")
+	}
+
+	export function replaceStringTest() {
+		assert.strictEqual(misc.replaceString("abc", /a/g, "$&"), "abc")
+		assert.strictEqual(misc.replaceString("abc", /a/g, "$1"), "$1bc")
+		assert.strictEqual(misc.replaceString("abc", /(a)/g, "$1"), "abc")
+		assert.strictEqual(misc.replaceString("abc", /(a)/g, () => "$1"), "$1bc")
 	}
 
 	export function randomStringTest() {

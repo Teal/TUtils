@@ -282,6 +282,32 @@ export namespace fileSystemSyncTest {
 		assert.throws(() => { fileSystemSync.readLink("404") }, { code: "ENOENT" })
 	}
 
+	export async function searchAllTextTest() {
+		assert.deepStrictEqual(fileSystemSync.searchAllText("f3.txt", "f3"), [
+			{
+				path: "dir/sub1/f3.txt",
+				start: 0,
+				end: 2,
+				content: "f3.txt"
+			}
+		])
+		assert.deepStrictEqual(fileSystemSync.searchAllText("f4.txt", /F(\d+)/ig), [
+			{
+				path: "dir/sub1/f4.txt",
+				start: 0,
+				end: 2,
+				content: "f4.txt"
+			}
+		])
+	}
+
+	export async function replaceAllTextTest() {
+		assert.strictEqual(fileSystemSync.replaceAllText("f3.txt", "f3", "$&"), 1)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
+		assert.strictEqual(fileSystemSync.replaceAllText("f4.txt", /F(\d+)/ig, "$1"), 1)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+	}
+
 	export function copyDirTest() {
 		assert.strictEqual(fileSystemSync.copyDir("dir", "foo/copydir"), 3)
 		assert.strictEqual(fsSync.readFileSync("foo/copydir/sub1/f3.txt", "utf-8"), "f3.txt")

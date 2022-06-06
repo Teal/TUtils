@@ -48,10 +48,36 @@ export function stripBOM(content: string) {
 
 /**
  * 返回首字母大写的字符串
- * @param str 要处理的字符串
+ * @param value 要处理的字符串
  */
-export function capitalize(str: string) {
-	return str.charAt(0).toUpperCase() + str.slice(1)
+export function capitalize(value: string) {
+	return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+/**
+ * 替换字符串，如果字符串未替换则返回 `null`
+ * @param search 替换的源
+ * @param replacer 替换的目标
+ */
+export function replaceString(value: string, search: RegExp, replacer: string | ((source: string, ...args: any[]) => string)) {
+	let changed = false
+	const repalced = value.replace(search, (source, ...match: any[]) => {
+		changed = true
+		if (typeof replacer === "function") {
+			return replacer(source, ...match)
+		}
+		return replacer.replace(/\$&|\$(\d+)/g, (all, index) => {
+			if (!index) {
+				return source
+			}
+			index--
+			if (index < match.length - 2) {
+				return match[index]
+			}
+			return all
+		})
+	})
+	return changed ? repalced : null
 }
 
 /**
@@ -68,7 +94,8 @@ export function randomString(length: number) {
 
 /**
  * 拼接两个数组
- * @param arrays 要串联的数组
+ * @param x 要串联的数组
+ * @param y 要串联的数组
  */
 export function concat<T>(x: T[] | null | undefined, y: T[] | null | undefined) {
 	if (!x) {
