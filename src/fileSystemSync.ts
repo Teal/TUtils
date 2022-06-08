@@ -204,31 +204,28 @@ export function walk(path: string, options: WalkOptions, /**@internal */ _stats?
 				try {
 					stats = (options.follow !== false ? statSync : lstatSync)(path)
 				} catch (e) {
-					options.error?.(e, path)
+					options.error?.(e, path, _stats)
 					return
 				}
 				walk(path, options, stats)
 			} else {
-				options.error?.(e, path)
+				options.error?.(e, path, _stats)
 			}
 			return
 		}
-		if (!options.dir || options.dir(path, entries) !== false) {
+		if (!options.dir || options.dir(path, entries, _stats) !== false) {
 			for (const entry of entries) {
 				walk(joinPath(path, entry.name), options, entry)
 			}
 		}
 	} else if (_stats.isFile()) {
-		options.file?.(path)
+		options.file?.(path, _stats)
 	} else if (options.follow !== false && _stats.isSymbolicLink()) {
 		let stats: Stats
 		try {
 			stats = statSync(path)
 		} catch (e) {
-			if (e.code === "ENOENT") {
-				return
-			}
-			options.error?.(e, path)
+			options.error?.(e, path, _stats)
 			return
 		}
 		walk(path, options, stats)
@@ -251,6 +248,9 @@ export function walkGlob(pattern: Pattern, callback: (path: string) => any, base
 		walk(base, {
 			follow: followLinks,
 			error(e) {
+				if (e.code === "ENOENT") {
+					return
+				}
 				throw e
 			},
 			dir: excludeMatcher ? path => !excludeMatcher.test(path) : undefined,

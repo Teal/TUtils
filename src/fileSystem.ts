@@ -274,9 +274,9 @@ export class FileSystem {
 			let pending = 0
 			walk(path)
 
-			async function walk(path: string, stats?: Dirent | Stats) {
+			async function walk(path: string, _stats?: Dirent | Stats) {
 				pending++
-				if (!stats || stats.isDirectory()) {
+				if (!_stats || _stats.isDirectory()) {
 					safeCall(readdir, [path || ".", { withFileTypes: true }], async (error: NodeJS.ErrnoException | null, entries: Dirent[]) => {
 						try {
 							if (error) {
@@ -285,7 +285,7 @@ export class FileSystem {
 										try {
 											if (error) {
 												if (options.error) {
-													await options.error(error, path)
+													await options.error(error, path, _stats)
 												}
 											} else {
 												walk(path, stats)
@@ -299,7 +299,7 @@ export class FileSystem {
 									})
 									return
 								} else if (options.error) {
-									await options.error(error, path)
+									await options.error(error, path, _stats)
 								}
 							} else if (!options.dir || await options.dir(path, entries) !== false) {
 								for (const entry of entries) {
@@ -314,16 +314,16 @@ export class FileSystem {
 						}
 					})
 					return
-				} else if (stats.isFile()) {
+				} else if (_stats.isFile()) {
 					if (options.file) {
-						await options.file(path)
+						await options.file(path, _stats)
 					}
-				} else if (options.follow !== false && stats.isSymbolicLink()) {
+				} else if (options.follow !== false && _stats.isSymbolicLink()) {
 					stat(path, async (error, stats) => {
 						try {
 							if (error) {
-								if (error.code !== "ENOENT" && options.error) {
-									await options.error(error, path)
+								if (options.error) {
+									await options.error(error, path, _stats)
 								}
 							} else {
 								walk(path, stats)
@@ -337,7 +337,7 @@ export class FileSystem {
 					})
 					return
 				} else if (options.other) {
-					await options.other(path, stats)
+					await options.other(path, _stats)
 				}
 				if (--pending === 0) {
 					resolve()
@@ -359,6 +359,9 @@ export class FileSystem {
 		return Promise.all(matcher.getBases().map(base => this.walk(base, {
 			follow: followLinks,
 			error(e) {
+				if (e.code === "ENOENT") {
+					return
+				}
 				throw e
 			},
 			dir: excludeMatcher ? path => !excludeMatcher.test(path) : undefined,
@@ -920,19 +923,22 @@ export interface WalkOptions {
 	 * 处理错误的回调函数
 	 * @param error 错误对象
 	 * @param path 出现错误的路径
+	 * @param stats 文件的属性
 	 */
-	error?(error: NodeJS.ErrnoException, path: string): any
+	error?(error: NodeJS.ErrnoException, path: string, stats?: Dirent | Stats): any
 	/**
 	 * 处理一个文件夹的回调函数，如果函数返回 `false` 则跳过遍历此文件夹
 	 * @param path 当前文件夹的路径
 	 * @param entries 当前文件夹下的所有项
+	 * @param stats 文件的属性
 	 */
-	dir?(path: string, entries: Dirent[]): any
+	dir?(path: string, entries: Dirent[], stats?: Dirent | Stats): any
 	/**
 	 * 处理一个文件的回调函数
 	 * @param path 当前文件的路径
+	 * @param stats 文件的属性
 	 */
-	file?(path: string): any
+	file?(path: string, stats: Dirent | Stats): any
 	/**
 	 * 处理一个其它类型文件（如软链接）的回调函数
 	 * @param path 当前文件的路径
