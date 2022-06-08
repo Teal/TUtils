@@ -225,6 +225,9 @@ export function walk(path: string, options: WalkOptions, /**@internal */ _stats?
 		try {
 			stats = statSync(path)
 		} catch (e) {
+			if (e.code === "ENOENT") {
+				return
+			}
 			options.error?.(e, path)
 			return
 		}

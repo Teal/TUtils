@@ -322,7 +322,7 @@ export class FileSystem {
 					stat(path, async (error, stats) => {
 						try {
 							if (error) {
-								if (options.error) {
+								if (error.code !== "ENOENT" && options.error) {
 									await options.error(error, path)
 								}
 							} else {
