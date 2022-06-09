@@ -568,7 +568,7 @@ export function copyFile(src: string, dest: string, overwrite = true): boolean {
  */
 export function copyLink(src: string, dest: string, overwrite = true) {
 	try {
-		src = readlinkSync(src)
+		src = resolvePath(dirname(src), readlinkSync(src))
 	} catch { }
 	return createLink(dest, src, overwrite)
 }

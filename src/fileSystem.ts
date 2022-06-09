@@ -771,7 +771,7 @@ export class FileSystem {
 	 */
 	async copyLink(src: string, dest: string, overwrite = true) {
 		try {
-			src = await this.readLink(src)
+			src = resolvePath(dirname(src), await this.readLink(src))
 		} catch { }
 		return this.createLink(dest, src, overwrite)
 	}
