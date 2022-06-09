@@ -938,7 +938,7 @@ export interface WalkOptions {
 	 * @param path 当前文件的路径
 	 * @param stats 文件的属性
 	 */
-	file?(path: string, stats: Dirent | Stats): any
+	file?(path: string, stats?: Dirent | Stats): any
 	/**
 	 * 处理一个其它类型文件（如软链接）的回调函数
 	 * @param path 当前文件的路径
