@@ -169,7 +169,6 @@ export function appendName(path: string, value: string): string {
  * @param index 要追加的索引，其中的数字会递增
  * @example appendIndex("foo/goo.src.txt") // "foo/goo_2.src.txt"
  * @example appendIndex("foo/goo_2.src.txt") // "foo/goo_3.src.txt"
- * @deprecated 使用 {@link getNewPath} 代替
  */
 export function appendIndex(path: string, index = "_2") {
 	let append = true
@@ -192,7 +191,7 @@ export function appendIndex(path: string, index = "_2") {
  * @example getNewPath("test", "-2") // "test-2"
  * @example getNewPath("test-2", "-2") // "test-3"
  */
-export function getNewPath(path: string, append = "-2", ext = "") {
+export function getNewPath(path: string, append = "-2", ext = getExt(path)) {
 	if (ext) path = path.substring(0, path.length - ext.length)
 	const digits = /\d+$/.exec(path)
 	if (digits) {
