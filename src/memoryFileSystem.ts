@@ -1,9 +1,8 @@
 import { createReadStream, createWriteStream, Dirent, Stats } from "fs"
 import { basename, dirname, join, resolve as resolvePath, sep } from "path"
+import { Readable, Writable } from "stream"
 import { FileSystem, WalkOptions } from "./fileSystem"
 import { appendIndex, containsPath, joinPath } from "./path"
-import { Readable, Writable } from "stream"
-import { escapeRegExp } from "./misc"
 
 /** 表示一个内存模拟的文件系统 */
 export class MemoryFileSystem extends FileSystem {

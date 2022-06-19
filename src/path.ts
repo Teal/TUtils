@@ -169,6 +169,7 @@ export function appendName(path: string, value: string): string {
  * @param index 要追加的索引，其中的数字会递增
  * @example appendIndex("foo/goo.src.txt") // "foo/goo_2.src.txt"
  * @example appendIndex("foo/goo_2.src.txt") // "foo/goo_3.src.txt"
+ * @deprecated 使用 {@link getNewPath} 代替
  */
 export function appendIndex(path: string, index = "_2") {
 	let append = true
@@ -180,6 +181,27 @@ export function appendIndex(path: string, index = "_2") {
 		path = appendName(path, index)
 	}
 	return path
+}
+
+/**
+ * 计算重命名后的路径
+ * @params path 目标字段
+ * @params append 转换附加字符串
+ * @params ext 排除的扩展名
+ * @example getNewPath("测试 - 副本", " - 副本") // "测试 - 副本2"
+ * @example getNewPath("test", "-2") // "test-2"
+ * @example getNewPath("test-2", "-2") // "test-3"
+ */
+export function getNewPath(path: string, append = "-2", ext = "") {
+	if (ext) path = path.substring(0, path.length - ext.length)
+	const digits = /\d+$/.exec(path)
+	if (digits) {
+		return path.substring(0, digits.index) + (parseInt(digits[0]) + 1) + ext
+	}
+	if (path.endsWith(append)) {
+		return path + "2" + ext
+	}
+	return path + append + ext
 }
 
 /**

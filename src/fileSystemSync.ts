@@ -84,7 +84,16 @@ export function createDir(path: string) {
  * @returns 返回已创建文件夹路径
  */
 export function createTempDir(parent = (require("os") as typeof import("os")).tmpdir()) {
-	return mkdtempSync(parent + sep)
+	try {
+		return mkdtempSync(parent + sep)
+	} catch (e) {
+		if (e.code === "ENOENT") {
+			createDir(parent)
+			return createTempDir(parent)
+		} else {
+			throw e
+		}
+	}
 }
 
 /**

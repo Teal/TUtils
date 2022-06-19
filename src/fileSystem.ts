@@ -126,7 +126,13 @@ export class FileSystem {
 		return new Promise<string>((resolve, reject) => {
 			mkdtemp(parent + sep, (error, path) => {
 				if (error) {
-					reject(error)
+					if (error.code === "ENOENT") {
+						this.createDir(parent).then(() => {
+							this.createTempDir(parent).then(resolve, reject)
+						}, reject)
+					} else {
+						reject(error)
+					}
 				} else {
 					resolve(path)
 				}

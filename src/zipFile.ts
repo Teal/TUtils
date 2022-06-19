@@ -346,7 +346,7 @@ export class ZipFile {
 	 * 在 Zip 内部创建文件夹
 	 * @param zipName Zip 内相对路径
 	 */
-	addDir(zipName: string) {
+	createDir(zipName: string) {
 		const entry = new ZipEntry()
 		entry.fileName = zipName + "/"
 		this.addEntry(entry)
@@ -358,13 +358,13 @@ export class ZipFile {
 	 * @param path 文件路径
 	 * @param zipName Zip 内相对路径
 	 */
-	addFolder(path: string, zipName = "") {
+	addDir(path: string, zipName = "") {
 		walk(path, {
 			dir: (name) => {
 				if (name === path) {
 					return
 				}
-				this.addDir(joinPath(zipName, relativePath(path, name)))
+				this.createDir(joinPath(zipName, relativePath(path, name)))
 			},
 			file: (name) => {
 				this.addFile(name, joinPath(zipName, relativePath(path, name)))
@@ -840,7 +840,7 @@ export function extractZip(path: string, directory = setExt(path, ""), override?
  */
 export function compressFolder(directory: string, path = directory + ".zip", comment?: string, password?: string) {
 	const zipFile = new ZipFile()
-	zipFile.addFolder(directory)
+	zipFile.addDir(directory)
 	zipFile.comment = comment
 	writeFile(path, zipFile.compress(password))
 	return zipFile
