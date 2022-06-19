@@ -392,6 +392,107 @@ export function appendFile(path: string, data: string | Buffer) {
 }
 
 /**
+ * 搜索指定文件
+ * @param path 要搜索的文件路径
+ * @param search 搜索的源
+ * @param limit 限制匹配的数目
+ */
+export function searchText(path: string, search: string | RegExp, limit?: number) {
+	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+	const result: SearchTextResult[] = []
+	const content = readText(path, false)
+	if (content !== null) {
+		for (const match of content.matchAll(regexp)) {
+			if (result.length === limit) {
+				return
+			}
+			result.push({
+				path,
+				start: match.index,
+				end: match.index + match[0].length,
+				content,
+			})
+		}
+	}
+	return result
+}
+
+/**
+ * 搜索匹配的文件
+ * @param pattern 要搜索的通配符
+ * @param search 搜索的源
+ * @param baseDir 搜索的根目录
+ * @param limit 限制匹配的数目
+ * @param followLinks 是否展开链接，默认 `false`
+ */
+export function searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number, followLinks?: boolean) {
+	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+	const result: SearchTextResult[] = []
+	walkGlob(pattern, async path => {
+		if (result.length === limit) {
+			return
+		}
+		const content = readText(path)
+		for (const match of content.matchAll(regexp)) {
+			if (result.length === limit) {
+				return
+			}
+			result.push({
+				path,
+				start: match.index,
+				end: match.index + match[0].length,
+				content,
+			})
+		}
+	}, baseDir, !!followLinks)
+	return result
+}
+
+/**
+ * 替换匹配的文件
+ * @param path 要搜索的文件路径
+ * @param search 替换的源
+ * @param replacer 替换的目标
+ * @returns 返回受影响的文件数
+ */
+export function replaceText(path: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string)) {
+	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+	const content = readText(path, false)
+	if (content === null) {
+		return false
+	}
+	const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
+	if (repalced !== null) {
+		writeFile(path, repalced)
+		return true
+	}
+	return false
+}
+
+/**
+ * 替换匹配的文件
+ * @param pattern 要搜索的通配符
+ * @param search 替换的源
+ * @param replacer 替换的目标
+ * @param baseDir 搜索的根目录
+ * @param followLinks 是否展开链接，默认 `false`
+ * @returns 返回受影响的文件数
+ */
+export function replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string, followLinks?: boolean) {
+	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
+	let result = 0
+	walkGlob(pattern, async path => {
+		const content = readText(path)
+		const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
+		if (repalced !== null) {
+			result++
+			writeFile(path, repalced)
+		}
+	}, baseDir, !!followLinks)
+	return result
+}
+
+/**
  * 创建一个软链接
  * @param path 要创建的文件路径
  * @param target 要链接的目标路径
@@ -447,59 +548,6 @@ export function createLink(path: string, target: string, overwrite = true): bool
  */
 export function readLink(path: string) {
 	return readlinkSync(path)
-}
-
-/**
- * 搜索匹配的文件
- * @param pattern 要搜索的通配符
- * @param search 搜索的源
- * @param baseDir 搜索的根目录
- * @param limit 限制匹配的数目
- * @param followLinks 是否展开链接，默认 `false`
- */
-export function searchAllText(pattern: string, search: string | RegExp, baseDir?: string, limit?: number, followLinks?: boolean) {
-	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
-	const result: SearchTextResult[] = []
-	walkGlob(pattern, async path => {
-		if (result.length === limit) {
-			return
-		}
-		const content = readText(path)
-		for (const match of content.matchAll(regexp)) {
-			if (result.length === limit) {
-				return
-			}
-			result.push({
-				path,
-				start: match.index,
-				end: match.index + match[0].length,
-				content,
-			})
-		}
-	}, baseDir, !!followLinks)
-	return result
-}
-
-/**
- * 替换匹配的文件
- * @param pattern 要搜索的通配符
- * @param search 替换的源
- * @param replacer 替换的目标
- * @param followLinks 是否展开链接，默认 `false`
- * @returns 返回受影响的文件数
- */
-export function replaceAllText(pattern: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string), baseDir?: string, followLinks?: boolean) {
-	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
-	let result = 0
-	walkGlob(pattern, async path => {
-		const content = readText(path)
-		const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
-		if (repalced !== null) {
-			result++
-			writeFile(path, repalced)
-		}
-	}, baseDir, !!followLinks)
-	return result
 }
 
 /**

@@ -266,6 +266,63 @@ export namespace fileSystemTest {
 		await assert.rejects(async () => { await fs.appendFile("dir", "你好") }, { code: "EISDIR" })
 	}
 
+	export async function searchTextTest() {
+		assert.deepStrictEqual(await fs.searchText("dir/sub1/f3.txt", "f3"), [
+			{
+				path: "dir/sub1/f3.txt",
+				start: 0,
+				end: 2,
+				content: "f3.txt"
+			}
+		])
+		assert.deepStrictEqual(await fs.searchText("dir/sub1/f4.txt", /F(\d+)/ig), [
+			{
+				path: "dir/sub1/f4.txt",
+				start: 0,
+				end: 2,
+				content: "f4.txt"
+			}
+		])
+	}
+
+	export async function searchAllTextTest() {
+		assert.deepStrictEqual(await fs.searchAllText("f3.txt", "f3"), [
+			{
+				path: "dir/sub1/f3.txt",
+				start: 0,
+				end: 2,
+				content: "f3.txt"
+			}
+		])
+		assert.deepStrictEqual(await fs.searchAllText("f4.txt", /F(\d+)/ig), [
+			{
+				path: "dir/sub1/f4.txt",
+				start: 0,
+				end: 2,
+				content: "f4.txt"
+			}
+		])
+	}
+
+	export async function replaceTextTest() {
+		assert.strictEqual(await fs.replaceText("dir/sub1/f3.txt", "f3", "$&"), true)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
+		assert.strictEqual(await fs.replaceText("dir/sub1/f4.txt", /F(\d+)/ig, "$1"), true)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+		assert.strictEqual(await fs.replaceText("dir/sub1/f4.txt", /X(\d+)/ig, "$1"), false)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+		assert.strictEqual(await fs.replaceText("dir/sub1/not-exists.txt", /X(\d+)/ig, "$1"), false)
+	}
+
+	export async function replaceAllTextTest() {
+		assert.strictEqual(await fs.replaceAllText("f3.txt", "f3", "$&"), 1)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
+		assert.strictEqual(await fs.replaceAllText("f4.txt", /F(\d+)/ig, "$1"), 1)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+		assert.strictEqual(await fs.replaceAllText("f4.txt", /X(\d+)/ig, "$1"), 0)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+	}
+
 	export async function createLinkTest() {
 		assert.strictEqual(await fs.createLink("foo/lnk", "f1.txt"), true)
 		assert.strictEqual(await fs.readFile("foo/lnk", "utf-8"), "f1.txt")
@@ -353,32 +410,6 @@ export namespace fileSystemTest {
 				stream.end("file")
 			})
 		}, { code: "ENOENT" })
-	}
-
-	export async function searchAllTextTest() {
-		assert.deepStrictEqual(await fs.searchAllText("f3.txt", "f3"), [
-			{
-				path: "dir/sub1/f3.txt",
-				start: 0,
-				end: 2,
-				content: "f3.txt"
-			}
-		])
-		assert.deepStrictEqual(await fs.searchAllText("f4.txt", /F(\d+)/ig), [
-			{
-				path: "dir/sub1/f4.txt",
-				start: 0,
-				end: 2,
-				content: "f4.txt"
-			}
-		])
-	}
-
-	export async function replaceAllTextTest() {
-		assert.strictEqual(await fs.replaceAllText("f3.txt", "f3", "$&"), 1)
-		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
-		assert.strictEqual(await fs.replaceAllText("f4.txt", /F(\d+)/ig, "$1"), 1)
-		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
 	}
 
 	export async function copyDirTest() {

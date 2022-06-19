@@ -260,26 +260,23 @@ export namespace fileSystemSyncTest {
 		assert.throws(() => { fileSystemSync.appendFile("dir", "你好") }, { code: "EISDIR" })
 	}
 
-	export function createLinkTest() {
-		assert.strictEqual(fileSystemSync.createLink("foo/lnk", "f1.txt"), true)
-		assert.strictEqual(fileSystemSync.readFile("foo/lnk", "utf-8"), "f1.txt")
-
-		assert.strictEqual(fileSystemSync.createLink("foo/lnk", "f2.txt", false), false)
-		assert.strictEqual(fileSystemSync.readFile("foo/lnk", "utf-8"), "f1.txt")
-
-		assert.strictEqual(fileSystemSync.createLink("foo/lnk", "f2.txt"), true)
-		assert.strictEqual(fileSystemSync.readFile("foo/lnk", "utf-8"), "f2.txt")
-
-		assert.strictEqual(fileSystemSync.createLink("foo/lnk2", "dir"), true)
-		assert.strictEqual(fileSystemSync.createLink("foo/lnk2", "dir", false), false)
-		assert.strictEqual(fileSystemSync.readFile("foo/lnk2/sub2/f5.txt", "utf-8"), "f5.txt")
-	}
-
-	export function readLinkTest() {
-		assert.strictEqual(fileSystemSync.createLink("lnk", "dir"), true)
-		assert.strictEqual(path.relative(rootDir, fileSystemSync.readLink("lnk")), "dir")
-
-		assert.throws(() => { fileSystemSync.readLink("404") }, { code: "ENOENT" })
+	export async function searchTextTest() {
+		assert.deepStrictEqual(fileSystemSync.searchText("dir/sub1/f3.txt", "f3"), [
+			{
+				path: "dir/sub1/f3.txt",
+				start: 0,
+				end: 2,
+				content: "f3.txt"
+			}
+		])
+		assert.deepStrictEqual(fileSystemSync.searchText("dir/sub1/f4.txt", /F(\d+)/ig), [
+			{
+				path: "dir/sub1/f4.txt",
+				start: 0,
+				end: 2,
+				content: "f4.txt"
+			}
+		])
 	}
 
 	export async function searchAllTextTest() {
@@ -301,11 +298,42 @@ export namespace fileSystemSyncTest {
 		])
 	}
 
+	export async function replaceTextTest() {
+		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/f3.txt", "f3", "$&"), true)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
+		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/f4.txt", /F(\d+)/ig, "$1"), true)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/f4.txt", /X(\d+)/ig, "$1"), false)
+		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/not-exists.txt", /X(\d+)/ig, "$1"), false)
+	}
 	export async function replaceAllTextTest() {
 		assert.strictEqual(fileSystemSync.replaceAllText("f3.txt", "f3", "$&"), 1)
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
 		assert.strictEqual(fileSystemSync.replaceAllText("f4.txt", /F(\d+)/ig, "$1"), 1)
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
+	}
+
+	export function createLinkTest() {
+		assert.strictEqual(fileSystemSync.createLink("foo/lnk", "f1.txt"), true)
+		assert.strictEqual(fileSystemSync.readFile("foo/lnk", "utf-8"), "f1.txt")
+
+		assert.strictEqual(fileSystemSync.createLink("foo/lnk", "f2.txt", false), false)
+		assert.strictEqual(fileSystemSync.readFile("foo/lnk", "utf-8"), "f1.txt")
+
+		assert.strictEqual(fileSystemSync.createLink("foo/lnk", "f2.txt"), true)
+		assert.strictEqual(fileSystemSync.readFile("foo/lnk", "utf-8"), "f2.txt")
+
+		assert.strictEqual(fileSystemSync.createLink("foo/lnk2", "dir"), true)
+		assert.strictEqual(fileSystemSync.createLink("foo/lnk2", "dir", false), false)
+		assert.strictEqual(fileSystemSync.readFile("foo/lnk2/sub2/f5.txt", "utf-8"), "f5.txt")
+	}
+
+	export function readLinkTest() {
+		assert.strictEqual(fileSystemSync.createLink("lnk", "dir"), true)
+		assert.strictEqual(path.relative(rootDir, fileSystemSync.readLink("lnk")), "dir")
+
+		assert.throws(() => { fileSystemSync.readLink("404") }, { code: "ENOENT" })
 	}
 
 	export function copyDirTest() {

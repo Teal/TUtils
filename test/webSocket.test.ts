@@ -15,7 +15,7 @@ export namespace webSocketTest {
 			const wss = new webSocket.WebSocketServer({ port: 0 })
 			wss.start()
 			wss.on("listening", () => {
-				const ws = new webSocket.WebSocket(wss.url)
+				const ws = new webSocket.WebSocket(wss.url!)
 				assert.throws(() => {
 					ws.send("hi")
 				})
@@ -40,7 +40,7 @@ export namespace webSocketTest {
 			const wss = new webSocket.WebSocketServer({ port: 0 })
 			wss.start()
 			wss.on("listening", () => {
-				const ws = new webSocket.WebSocket(wss.url)
+				const ws = new webSocket.WebSocket(wss.url!)
 				ws.on("open", () => {
 					ws.send(buffer)
 					ws.on("message", (data: Buffer) => {
