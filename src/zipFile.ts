@@ -254,7 +254,7 @@ export class ZipFile {
 			let offset = centralFileHeaderOffset + 46
 			entry.fileName = buffer.toString("utf-8", offset, offset += fileNameLength)
 			if (extraLength) {
-				const extra = entry.extra = buffer.slice(offset, offset += extraLength)
+				const extra = entry.extra = buffer.subarray(offset, offset += extraLength)
 				// 读取 Zip64 扩展信息
 				for (let i = 0; i < extraLength;) {
 					const signature = extra.readUInt16LE(i)
@@ -275,8 +275,8 @@ export class ZipFile {
 			const localFileNameLength = buffer.readUInt16LE(localHeaderOffset + 26)
 			const localExtraLength = buffer.readUInt16LE(localHeaderOffset + 28)
 			const localDataOffset = localHeaderOffset + 30 + localFileNameLength + localExtraLength
-			console.assert(localCompressedSize === compressedSize, `Central and local directory mismatch for file '${entry.fileName}'`)
-			entry.compressedData = buffer.slice(localDataOffset, localDataOffset + localCompressedSize)
+			console.assert(localCompressedSize === 0 || localCompressedSize === compressedSize, `Central and local directory mismatch for file '${entry.fileName}'`)
+			entry.compressedData = buffer.subarray(localDataOffset, localDataOffset + compressedSize)
 			centralFileHeaderOffset += 46 + fileNameLength + extraLength + commentLength
 		}
 		return zip
@@ -808,8 +808,8 @@ class ZipCryptor {
 
 function decrypt(data: Buffer, password: string | Buffer) {
 	const decrypter = new ZipCryptor(password)
-	decrypter.decrypt(data.slice(0, 12))
-	return decrypter.decrypt(data.slice(12))
+	decrypter.decrypt(data.subarray(0, 12))
+	return decrypter.decrypt(data.subarray(12))
 }
 
 function encrypt(data: Buffer, password: string | Buffer) {
