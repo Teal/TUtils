@@ -200,10 +200,9 @@ fs.deleteParentDirIfEmpty("dir/foo.txt") // 删除空文件夹
 类似 `fileSystemSync`，提供创建、移动、复制、搜索文件和文件夹相关的工具函数，但是异步的（更快），所有函数均需要使用 `await` 语法等待结果。
 
 ```js
-const { FileSystem } = require("tutils/fileSystem")
-const fs = new FileSystem()
+const { fs } = require("tutils/fileSystem")
 
-// 之后用法同 fileSystemSync，唯一区别是需要加 await
+// 用法同 fileSystemSync，唯一区别是需要加 await
 await fs.writeFile("foo.txt", "Hello world")
 ```
 

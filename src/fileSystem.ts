@@ -1013,6 +1013,9 @@ export interface SearchTextResult {
 	content: string
 }
 
+/** 表示一个异步文件系统 */
+export const fs = new FileSystem()
+
 /** 安全调用系统 IO 函数，如果出现 EMFILE 错误则自动延时 */
 function safeCall(func: DelayedCall["syscall"], args: DelayedCall["arguments"], callback: DelayedCall["callback"]) {
 	func(...args, (error: NodeJS.ErrnoException, data: any) => {
