@@ -4,7 +4,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Coveralls Status][coveralls-image]][coveralls-url]
 
-**200+** 个常用 NodeJS 工具库，顶 **140+** 个 NPM 依赖，比如通配符、文件监听、网络库、Zip 压缩等。
+**200+** 个 NodeJS 工具库，顶 **140+** 个 NPM 依赖，比如通配符、文件监听、网络库、Zip 压缩等。
 
 如果你有依赖强迫症，这一个库就能帮你省不少依赖，而且风格统一 + 全中文注释 + 稳定高性能。
 
