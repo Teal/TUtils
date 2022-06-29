@@ -15,6 +15,15 @@ export function getStat(path: string, resolveLink = true) {
 }
 
 /**
+ * 判断指定的路径是否存在
+ * @param path 要判断的路径
+ * @returns 如果路径不存在，则返回 `false`，否则返回 `true`
+ */
+export function exists(path: string) {
+	return existsSync(path)
+}
+
+/**
  * 判断指定的文件是否存在
  * @param path 要判断的路径
  * @returns 如果文件不存在或路径不是一个文件，则返回 `false`，否则返回 `true`
@@ -556,19 +565,26 @@ export function readLink(path: string) {
  * @param dest 要复制的目标路径
  * @param overwrite 是否覆盖已有的目标
  * @param preserveLinks 是否保留链接
+ * @param filter 忽略的通配符
  * @returns 返回已复制的文件数
  */
-export function copyDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
+export function copyDir(src: string, dest: string, overwrite = true, preserveLinks = true, filter?: Pattern) {
+	if (filter && !(filter instanceof Matcher)) {
+		filter = new Matcher(filter, src)
+	}
 	createDir(dest)
 	const entries = readdirSync(src, { withFileTypes: true })
 	let count = 0
 	let firstError: NodeJS.ErrnoException | undefined
 	for (const entry of entries) {
-		const fromChild = join(src, entry.name)
+		const fromChild = joinPath(src, entry.name)
+		if (filter && (filter as Matcher).test(fromChild)) {
+			continue
+		}
 		const toChild = join(dest, entry.name)
 		try {
 			if (entry.isDirectory()) {
-				count += copyDir(fromChild, toChild, overwrite)
+				count += copyDir(fromChild, toChild, overwrite, preserveLinks, filter)
 			} else if (preserveLinks && entry.isSymbolicLink()) {
 				if (copyLink(fromChild, toChild, overwrite)) {
 					count++
@@ -636,27 +652,25 @@ export function copyLink(src: string, dest: string, overwrite = true) {
  * @param dest 要移动的目标路径
  * @param overwrite 是否允许覆盖现有的目标
  * @param preserveLinks 是否保留链接
- * @returns 返回已移动的文件数
  */
-export function moveDir(src: string, dest: string, overwrite = true, preserveLinks = true): number {
+export function moveDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
+	try {
+		moveFile(src, dest, overwrite)
+		return
+	} catch { }
 	createDir(dest)
 	const entries = readdirSync(src, { withFileTypes: true })
-	let count = 0
 	let firstError: NodeJS.ErrnoException | undefined
 	for (const entry of entries) {
-		const fromChild = join(src, entry.name)
+		const fromChild = joinPath(src, entry.name)
 		const toChild = join(dest, entry.name)
 		try {
 			if (entry.isDirectory()) {
-				count += moveDir(fromChild, toChild, overwrite)
+				moveDir(fromChild, toChild, overwrite, preserveLinks)
 			} else if (preserveLinks && entry.isSymbolicLink()) {
-				if (moveLink(fromChild, toChild, overwrite)) {
-					count++
-				}
+				moveLink(fromChild, toChild, overwrite)
 			} else {
-				if (moveFile(fromChild, toChild, overwrite)) {
-					count++
-				}
+				moveFile(fromChild, toChild, overwrite)
 			}
 		} catch (e) {
 			firstError = firstError || e
@@ -672,7 +686,6 @@ export function moveDir(src: string, dest: string, overwrite = true, preserveLin
 			throw e
 		}
 	}
-	return count
 }
 
 /**

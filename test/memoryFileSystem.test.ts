@@ -38,6 +38,13 @@ export namespace memoryFileSystemTest {
 		await assert.rejects(async () => { await fs.getStat("404", false) }, { code: "ENOENT" })
 	}
 
+	export async function existsTest() {
+		assert.strictEqual(await fs.exists("f1.txt"), true)
+		assert.strictEqual(await fs.exists("dir"), true)
+
+		assert.strictEqual(await fs.exists("404"), false)
+	}
+
 	export async function existsFileTest() {
 		assert.strictEqual(await fs.existsFile("f1.txt"), true)
 		assert.strictEqual(await fs.existsFile("dir"), false)
@@ -372,6 +379,11 @@ export namespace memoryFileSystemTest {
 		assert.strictEqual(await fs.copyDir("empty-dir", "foo/empty-dir"), 0)
 		assert.strictEqual(await fs.existsDir("foo/empty-dir"), true)
 
+		assert.strictEqual(await fs.copyDir("dir", "foo/copydir2", undefined, undefined, "f3.txt"), 2)
+		assert.strictEqual(await fs.exists("foo/copydir2/sub1/f3.txt"), false)
+		assert.strictEqual(await fs.readFile("foo/copydir2/sub1/f4.txt", "utf-8"), "f4.txt")
+		assert.strictEqual(await fs.readFile("foo/copydir2/sub2/f5.txt", "utf-8"), "f5.txt")
+
 		await assert.rejects(async () => { await fs.copyDir("404", "foo/copydir") }, { code: "ENOENT" })
 		await assert.rejects(async () => { await fs.copyDir("f1.txt", "foo/copydir") }, { code: "ENOTDIR" })
 	}
@@ -428,9 +440,9 @@ export namespace memoryFileSystemTest {
 	}
 
 	export async function getRealPathTest() {
-		assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("f1.txt")), "f1.txt")
+		assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("f1.txt") ?? "f1.txt"), "f1.txt")
 		if (fs.isCaseInsensitive) {
-			assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("F1.txt")), "f1.txt")
+			assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("F1.txt") ?? "f1.txt"), "f1.txt")
 		}
 
 		assert.strictEqual(await fs.getRealPath("404"), null)

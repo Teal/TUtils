@@ -42,6 +42,13 @@ export namespace fileSystemSyncTest {
 		assert.throws(() => { fileSystemSync.getStat("404", false) }, { code: "ENOENT" })
 	}
 
+	export async function existsTest() {
+		assert.strictEqual(fileSystemSync.exists("f1.txt"), true)
+		assert.strictEqual(fileSystemSync.exists("dir"), true)
+
+		assert.strictEqual(fileSystemSync.exists("404"), false)
+	}
+
 	export function existsFileTest() {
 		assert.strictEqual(fileSystemSync.existsFile("f1.txt"), true)
 		assert.strictEqual(fileSystemSync.existsFile("dir"), false)
@@ -351,6 +358,11 @@ export namespace fileSystemSyncTest {
 		assert.strictEqual(fileSystemSync.copyDir("empty-dir", "foo/empty-dir"), 0)
 		assert.strictEqual(fsSync.existsSync("foo/empty-dir"), true)
 
+		assert.strictEqual(fileSystemSync.copyDir("dir", "foo/copydir2", undefined, undefined, "f3.txt"), 2)
+		assert.strictEqual(fsSync.existsSync("foo/copydir2/sub1/f3.txt"), false)
+		assert.strictEqual(fsSync.readFileSync("foo/copydir2/sub1/f4.txt", "utf-8"), "f4.txt")
+		assert.strictEqual(fsSync.readFileSync("foo/copydir2/sub2/f5.txt", "utf-8"), "f5.txt")
+
 		assert.throws(() => { fileSystemSync.copyDir("404", "foo/copydir") }, { code: "ENOENT" })
 		assert.throws(() => { fileSystemSync.copyDir("f1.txt", "foo/copydir") }, { code: "ENOTDIR" })
 	}
@@ -388,19 +400,19 @@ export namespace fileSystemSyncTest {
 	}
 
 	export function moveDirTest() {
-		assert.strictEqual(fileSystemSync.moveDir("dir", "foo/movedir"), 3)
+		fileSystemSync.moveDir("dir", "foo/movedir")
 		assert.strictEqual(fsSync.existsSync("dir"), false)
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f3.txt", "utf-8"), "f3.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f4.txt", "utf-8"), "f4.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub2/f5.txt", "utf-8"), "f5.txt")
 
 		fsSync.writeFileSync("foo/movedir/sub2/f5.txt", "f5.txt_1")
-		assert.strictEqual(fileSystemSync.moveDir("foo/movedir", "foo/movedir", false), 0)
+		fileSystemSync.moveDir("foo/movedir", "foo/movedir", false)
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f3.txt", "utf-8"), "f3.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f4.txt", "utf-8"), "f4.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub2/f5.txt", "utf-8"), "f5.txt_1")
 
-		assert.strictEqual(fileSystemSync.moveDir("empty-dir", "foo/empty-dir"), 0)
+		fileSystemSync.moveDir("empty-dir", "foo/empty-dir")
 		assert.strictEqual(fsSync.existsSync("empty-dir"), false)
 		assert.strictEqual(fsSync.existsSync("foo/empty-dir"), true)
 
@@ -441,9 +453,9 @@ export namespace fileSystemSyncTest {
 	}
 
 	export function getRealPathTest() {
-		assert.strictEqual(path.relative(process.cwd(), fileSystemSync.getRealPath("f1.txt")), "f1.txt")
+		assert.strictEqual(path.relative(process.cwd(), fileSystemSync.getRealPath("f1.txt") ?? "f1.txt"), "f1.txt")
 		if (isCaseInsensitive) {
-			assert.strictEqual(path.relative(process.cwd(), fileSystemSync.getRealPath("F1.txt")), "f1.txt")
+			assert.strictEqual(path.relative(process.cwd(), fileSystemSync.getRealPath("F1.txt") ?? "f1.txt"), "f1.txt")
 		}
 
 		assert.strictEqual(fileSystemSync.getRealPath("404"), null)

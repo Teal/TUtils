@@ -31,6 +31,27 @@ export class FileSystem {
 	}
 
 	/**
+	 * 判断指定的路径是否存在
+	 * @param path 要判断的路径
+	 * @returns 如果路径不存在，则返回 `false`，否则返回 `true`
+	 */
+	exists(path: string) {
+		return new Promise<boolean>((resolve, reject) => {
+			stat(path, (error) => {
+				if (error) {
+					if (error.code === "ENOENT" || error.code === "ENOTDIR") {
+						resolve(false)
+					} else {
+						reject(error)
+					}
+				} else {
+					resolve(true)
+				}
+			})
+		})
+	}
+
+	/**
 	 * 判断指定的文件是否存在
 	 * @param path 要判断的路径
 	 * @returns 如果文件不存在或路径不是一个文件，则返回 `false`，否则返回 `true`
@@ -733,9 +754,13 @@ export class FileSystem {
 	 * @param dest 要复制的目标路径
 	 * @param overwrite 是否覆盖已有的目标
 	 * @param preserveLinks 是否保留链接
+	   * @param filter 忽略的通配符
 	 * @returns 返回已复制的文件数
 	 */
-	copyDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
+	copyDir(src: string, dest: string, overwrite = true, preserveLinks = true, filter?: Pattern) {
+		if (filter && !(filter instanceof Matcher)) {
+			filter = new Matcher(filter, src)
+		}
 		return new Promise<number>((resolve, reject) => {
 			this.createDir(dest).then(() => {
 				safeCall(readdir, [src, { withFileTypes: true }], (error, entries: Dirent[]) => {
@@ -747,10 +772,16 @@ export class FileSystem {
 							let count = 0
 							let promise: Promise<boolean | number>
 							for (const entry of entries) {
-								const fromChild = join(src, entry.name)
+								const fromChild = joinPath(src, entry.name)
+								if (filter && (filter as Matcher).test(fromChild)) {
+									if (--pending === 0) {
+										resolve(count)
+									}
+									continue
+								}
 								const toChild = join(dest, entry.name)
 								if (entry.isDirectory()) {
-									promise = this.copyDir(fromChild, toChild, overwrite)
+									promise = this.copyDir(fromChild, toChild, overwrite, preserveLinks, filter)
 								} else if (preserveLinks && entry.isSymbolicLink()) {
 									promise = this.copyLink(fromChild, toChild, overwrite)
 								} else {
@@ -835,10 +866,9 @@ export class FileSystem {
 	 * @param src 要移动的源路径
 	 * @param dest 要移动的目标路径
 	 * @param overwrite 是否允许覆盖现有的目标
-	 * @returns 返回已移动的文件数
 	 */
-	moveDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
-		return new Promise<number>((resolve, reject) => {
+	moveDir(src: string, dest: string, overwrite = true, preserveLinks = true): Promise<any> {
+		return this.moveFile(src, dest, overwrite).catch(() => new Promise<void>((resolve, reject) => {
 			this.createDir(dest).then(() => {
 				safeCall(readdir, [src, { withFileTypes: true }], (error, entries: Dirent[]) => {
 					if (error) {
@@ -846,26 +876,24 @@ export class FileSystem {
 					} else {
 						let pending = entries.length
 						if (pending) {
-							let count = 0
 							for (const entry of entries) {
-								const fromChild = join(src, entry.name)
+								const fromChild = joinPath(src, entry.name)
 								const toChild = join(dest, entry.name)
-								let promise: Promise<boolean | number>
+								let promise: Promise<any>
 								if (entry.isDirectory()) {
-									promise = this.moveDir(fromChild, toChild, overwrite)
+									promise = this.moveDir(fromChild, toChild, overwrite, preserveLinks)
 								} else if (preserveLinks && entry.isSymbolicLink()) {
 									promise = this.moveLink(fromChild, toChild, overwrite)
 								} else {
 									promise = this.moveFile(fromChild, toChild, overwrite)
 								}
-								promise.then(childCount => {
-									count += childCount as number
+								promise.then(() => {
 									if (--pending === 0) {
 										this.deleteDir(src, false).then(() => {
-											resolve(count)
+											resolve()
 										}, overwrite ? reject : (error: NodeJS.ErrnoException) => {
 											if (error.code === "ENOTEMPTY") {
-												resolve(count)
+												resolve()
 											} else {
 												reject(error)
 											}
@@ -875,13 +903,13 @@ export class FileSystem {
 							}
 						} else {
 							this.deleteDir(src, false).then(() => {
-								resolve(0)
+								resolve()
 							}, reject)
 						}
 					}
 				})
 			}, reject)
-		})
+		}))
 	}
 
 	/**

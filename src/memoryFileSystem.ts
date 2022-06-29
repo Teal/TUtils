@@ -2,6 +2,7 @@ import { createReadStream, createWriteStream, Dirent, Stats } from "fs"
 import { basename, dirname, join, resolve as resolvePath, sep } from "path"
 import { Readable, Writable } from "stream"
 import { FileSystem, WalkOptions } from "./fileSystem"
+import { Matcher, Pattern } from "./matcher"
 import { appendIndex, containsPath, joinPath } from "./path"
 
 /** 表示一个内存模拟的文件系统 */
@@ -54,6 +55,15 @@ export class MemoryFileSystem extends FileSystem {
 			default:
 				return new (Stats as any)(0, 0o100666, 1, 0, 0, 0, 4096, 0, typeof data === "string" ? Buffer.byteLength(data) : data.length, 0, Date.now(), 0, 0, 0)
 		}
+	}
+
+	/**
+	 * 判断指定的路径是否存在
+	 * @param path 要判断的路径
+	 * @returns 如果路径不存在，则返回 `false`，否则返回 `true`
+	 */
+	async exists(path: string) {
+		return this.data.has(resolvePath(path))
 	}
 
 	/**
@@ -476,19 +486,26 @@ export class MemoryFileSystem extends FileSystem {
 	 * @param dest 要复制的目标路径
 	 * @param overwrite 是否覆盖已有的目标
 	 * @param preserveLinks 是否保留链接
+	 * @param filter 忽略的通配符
 	 * @returns 返回已复制的文件数
 	 */
-	async copyDir(src: string, dest: string, overwrite = true, preserveLinks?: boolean) {
+	async copyDir(src: string, dest: string, overwrite = true, preserveLinks?: boolean, filter?: Pattern) {
+		if (filter && !(filter instanceof Matcher)) {
+			filter = new Matcher(filter, src)
+		}
 		await this.createDir(dest)
 		const entries = await this.readDir(src, true)
 		let count = 0
 		let firstError: NodeJS.ErrnoException | undefined
 		for (const entry of entries) {
-			const fromChild = join(src, entry.name)
+			const fromChild = joinPath(src, entry.name)
+			if (filter && (filter as Matcher).test(fromChild)) {
+				continue
+			}
 			const toChild = join(dest, entry.name)
 			try {
 				if (entry.isDirectory()) {
-					count += await this.copyDir(fromChild, toChild, overwrite, preserveLinks)
+					count += await this.copyDir(fromChild, toChild, overwrite, preserveLinks, filter)
 				} else {
 					if (await this.copyFile(fromChild, toChild, overwrite)) {
 						count++
@@ -529,7 +546,7 @@ export class MemoryFileSystem extends FileSystem {
 		let count = 0
 		let firstError: NodeJS.ErrnoException | undefined
 		for (const entry of entries) {
-			const fromChild = join(src, entry.name)
+			const fromChild = joinPath(src, entry.name)
 			const toChild = join(dest, entry.name)
 			try {
 				if (entry.isDirectory()) {

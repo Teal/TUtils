@@ -48,6 +48,13 @@ export namespace fileSystemTest {
 		await assert.rejects(async () => { await fs.getStat("404", false) }, { code: "ENOENT" })
 	}
 
+	export async function existsTest() {
+		assert.strictEqual(await fs.exists("f1.txt"), true)
+		assert.strictEqual(await fs.exists("dir"), true)
+
+		assert.strictEqual(await fs.exists("404"), false)
+	}
+
 	export async function existsFileTest() {
 		assert.strictEqual(await fs.existsFile("f1.txt"), true)
 		assert.strictEqual(await fs.existsFile("dir"), false)
@@ -427,6 +434,11 @@ export namespace fileSystemTest {
 		assert.strictEqual(await fs.copyDir("empty-dir", "foo/empty-dir"), 0)
 		assert.strictEqual(fsSync.existsSync("foo/empty-dir"), true)
 
+		assert.strictEqual(await fs.copyDir("dir", "foo/copydir2", undefined, undefined, "f3.txt"), 2)
+		assert.strictEqual(fsSync.existsSync("foo/copydir2/sub1/f3.txt"), false)
+		assert.strictEqual(fsSync.readFileSync("foo/copydir2/sub1/f4.txt", "utf-8"), "f4.txt")
+		assert.strictEqual(fsSync.readFileSync("foo/copydir2/sub2/f5.txt", "utf-8"), "f5.txt")
+
 		await assert.rejects(async () => { await fs.copyDir("404", "foo/copydir") }, { code: "ENOENT" })
 		await assert.rejects(async () => { await fs.copyDir("f1.txt", "foo/copydir") }, { code: "ENOTDIR" })
 	}
@@ -465,19 +477,19 @@ export namespace fileSystemTest {
 	}
 
 	export async function moveDirTest() {
-		assert.strictEqual(await fs.moveDir("dir", "foo/movedir"), 3)
+		await fs.moveDir("dir", "foo/movedir")
 		assert.strictEqual(fsSync.existsSync("dir"), false)
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f3.txt", "utf-8"), "f3.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f4.txt", "utf-8"), "f4.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub2/f5.txt", "utf-8"), "f5.txt")
 
 		fsSync.writeFileSync("foo/movedir/sub2/f5.txt", "f5.txt_1")
-		assert.strictEqual(await fs.moveDir("foo/movedir", "foo/movedir", false), 0)
+		await fs.moveDir("foo/movedir", "foo/movedir", false)
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f3.txt", "utf-8"), "f3.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub1/f4.txt", "utf-8"), "f4.txt")
 		assert.strictEqual(fsSync.readFileSync("foo/movedir/sub2/f5.txt", "utf-8"), "f5.txt_1")
 
-		assert.strictEqual(await fs.moveDir("empty-dir", "foo/empty-dir"), 0)
+		await fs.moveDir("empty-dir", "foo/empty-dir")
 		assert.strictEqual(fsSync.existsSync("empty-dir"), false)
 		assert.strictEqual(fsSync.existsSync("foo/empty-dir"), true)
 
@@ -518,9 +530,9 @@ export namespace fileSystemTest {
 	}
 
 	export async function getRealPathTest() {
-		assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("f1.txt")), "f1.txt")
+		assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("f1.txt") ?? "f1.txt"), "f1.txt")
 		if (fs.isCaseInsensitive) {
-			assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("F1.txt")), "f1.txt")
+			assert.strictEqual(path.relative(process.cwd(), await fs.getRealPath("F1.txt") ?? "f1.txt"), "f1.txt")
 		}
 
 		assert.strictEqual(await fs.getRealPath("404"), null)
@@ -538,7 +550,7 @@ export namespace fileSystemTest {
 
 		export async function shouldOmitEMFiles() {
 			await simulateIOError(async () => {
-				const promises = []
+				const promises: Promise<string>[] = []
 				promises.push(fs.readFile("f1.txt", "utf-8"))
 				promises.push(fs.readFile("f1.txt", "utf-8"))
 				promises.push(fs.readFile("f1.txt", "utf-8"))
