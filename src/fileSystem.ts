@@ -1,7 +1,7 @@
 import { access, appendFile, constants, copyFile, createReadStream, createWriteStream, Dirent, link, lstat, mkdir, mkdtemp, readdir, readFile, readlink, realpath, rename, rmdir, stat, Stats, symlink, unlink, writeFile } from "fs"
 import { dirname, join, relative, resolve as resolvePath, sep } from "path"
 import { Matcher, Pattern } from "./matcher"
-import { escapeRegExp, replaceString } from "./misc"
+import { escapeRegExp, replaceString, stripBOM } from "./misc"
 import { appendIndex, isCaseInsensitive, joinPath } from "./path"
 
 /** 表示一个文件系统 */
@@ -553,6 +553,34 @@ export class FileSystem {
 	}
 
 	/**
+	 * 读取指定的 JSON 文件，如果文件不存在或解析失败则返回 `undefined`
+	 * @param path 要读取的文件路径
+	 */
+	async readJSON(path: string) {
+		const text = await this.readText(path, false)
+		if (text === null) {
+			return
+		}
+		try {
+			return JSON.parse(stripBOM(text))
+		} catch {
+			return
+		}
+	}
+
+	/**
+	 * 写入指定的 JSON 文件
+	 * @param path 要保存的文件路径
+	 * @param data 要保存的 JSON 数据
+	 */
+	async writeJSON(path: string, data: any) {
+		data = JSON.stringify(data)
+		const tmp = path + ".swp~"
+		await this.writeFile(tmp, data)
+		await this.moveFile(tmp, path)
+	}
+
+	/**
 	 * 搜索指定文件
 	 * @param path 要搜索的文件路径
 	 * @param search 搜索的源
@@ -754,12 +782,12 @@ export class FileSystem {
 	 * @param dest 要复制的目标路径
 	 * @param overwrite 是否覆盖已有的目标
 	 * @param preserveLinks 是否保留链接
-	   * @param filter 忽略的通配符
+	 * @param ignore 忽略的通配符
 	 * @returns 返回已复制的文件数
 	 */
-	copyDir(src: string, dest: string, overwrite = true, preserveLinks = true, filter?: Pattern) {
-		if (filter && !(filter instanceof Matcher)) {
-			filter = new Matcher(filter, src)
+	copyDir(src: string, dest: string, overwrite = true, preserveLinks = true, ignore?: Pattern) {
+		if (ignore && !(ignore instanceof Matcher)) {
+			ignore = new Matcher(ignore, src)
 		}
 		return new Promise<number>((resolve, reject) => {
 			this.createDir(dest).then(() => {
@@ -773,7 +801,7 @@ export class FileSystem {
 							let promise: Promise<boolean | number>
 							for (const entry of entries) {
 								const fromChild = joinPath(src, entry.name)
-								if (filter && (filter as Matcher).test(fromChild)) {
+								if (ignore && (ignore as Matcher).test(fromChild)) {
 									if (--pending === 0) {
 										resolve(count)
 									}
@@ -781,7 +809,7 @@ export class FileSystem {
 								}
 								const toChild = join(dest, entry.name)
 								if (entry.isDirectory()) {
-									promise = this.copyDir(fromChild, toChild, overwrite, preserveLinks, filter)
+									promise = this.copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
 								} else if (preserveLinks && entry.isSymbolicLink()) {
 									promise = this.copyLink(fromChild, toChild, overwrite)
 								} else {

@@ -3,7 +3,7 @@ import * as fsSync from "fs"
 import * as path from "path"
 import * as fileSystemSync from "../src/fileSystemSync"
 import { isCaseInsensitive } from "../src/path"
-import { init, rootDir, simulateIOError, uninit } from "./helpers/fsHelper"
+import { check, init, rootDir, simulateIOError, uninit } from "./helpers/fsHelper"
 
 export namespace fileSystemSyncTest {
 
@@ -267,7 +267,26 @@ export namespace fileSystemSyncTest {
 		assert.throws(() => { fileSystemSync.appendFile("dir", "你好") }, { code: "EISDIR" })
 	}
 
-	export async function searchTextTest() {
+	export function readJSONTest() {
+		fileSystemSync.writeFile("foo/goo.json", "[1]")
+		assert.deepStrictEqual(fileSystemSync.readJSON("foo/goo.json"), [1])
+		fileSystemSync.writeFile("foo/goo2.json", "")
+		assert.deepStrictEqual(fileSystemSync.readJSON("foo/goo2.json"), undefined)
+		assert.deepStrictEqual(fileSystemSync.readJSON("foo/goo3.json"), undefined)
+	}
+
+	export async function writeJSONTest() {
+		fileSystemSync.writeJSON("foo/main.json", "main.json")
+		check({ "foo/main.json": `"main.json"` })
+
+		assert.throws(() => { fileSystemSync.writeJSON("dir", "main.json") })
+
+		await simulateIOError(() => {
+			assert.throws(() => { fileSystemSync.writeJSON("foo/main.json", "main.json") })
+		})
+	}
+
+	export function searchTextTest() {
 		assert.deepStrictEqual(fileSystemSync.searchText("dir/sub1/f3.txt", "f3"), [
 			{
 				path: "dir/sub1/f3.txt",
@@ -286,7 +305,7 @@ export namespace fileSystemSyncTest {
 		])
 	}
 
-	export async function searchAllTextTest() {
+	export function searchAllTextTest() {
 		assert.deepStrictEqual(fileSystemSync.searchAllText("f3.txt", "f3"), [
 			{
 				path: "dir/sub1/f3.txt",
@@ -305,7 +324,7 @@ export namespace fileSystemSyncTest {
 		])
 	}
 
-	export async function replaceTextTest() {
+	export function replaceTextTest() {
 		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/f3.txt", "f3", "$&"), true)
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
 		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/f4.txt", /F(\d+)/ig, "$1"), true)
@@ -314,7 +333,7 @@ export namespace fileSystemSyncTest {
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
 		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/not-exists.txt", /X(\d+)/ig, "$1"), false)
 	}
-	export async function replaceAllTextTest() {
+	export function replaceAllTextTest() {
 		assert.strictEqual(fileSystemSync.replaceAllText("f3.txt", "f3", "$&"), 1)
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f3.txt", "utf-8"), "$&.txt")
 		assert.strictEqual(fileSystemSync.replaceAllText("f4.txt", /F(\d+)/ig, "$1"), 1)

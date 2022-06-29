@@ -1,6 +1,5 @@
 import * as assert from "assert"
 import * as json from "../src/json"
-import { check, init, simulateIOError, uninit } from "./helpers/fsHelper"
 
 export namespace jsonTest {
 
@@ -51,33 +50,68 @@ export namespace jsonTest {
 
 	}
 
-	export async function readJSONTest() {
-		await init({ "main.json": `"main.json" //comment` })
-		try {
-			assert.strictEqual(json.readJSON("main.json"), "main.json")
-
-			assert.throws(() => { json.readJSON("404") })
-		} finally {
-			await uninit()
-		}
+	export function readJSONByPathTest() {
+		assert.strictEqual(json.readJSONByPath({ a: 1 }, "a"), 1)
+		assert.strictEqual(json.readJSONByPath({ a: { b: 1 } }, "a/b"), 1)
+		assert.strictEqual(json.readJSONByPath({ a: [1] }, "a/0"), 1)
+		assert.strictEqual(json.readJSONByPath({ a: [1] }, "a/length"), 1)
+		assert.strictEqual(json.readJSONByPath({ a: [1] }, "b"), undefined)
 	}
 
-	export async function writeJSONTest() {
-		await init({
-			"dir": {}
-		})
-		try {
-			json.writeJSON("foo/main.json", "main.json")
-			await check({ "foo/main.json": `"main.json"` })
+	export function writeJSONByPathTest() {
+		const obj: any = {}
+		json.writeJSONByPath(obj, `a`, 1)
+		assert.strictEqual(obj.a, 1)
+		json.writeJSONByPath(obj, `b/c`, 1)
+		assert.deepStrictEqual(obj.b, { c: 1 })
+		json.writeJSONByPath(obj, `b/b`, 1)
+		assert.deepStrictEqual(obj.b, { c: 1, b: 1 })
+		json.writeJSONByPath(obj, `a/x`, 0)
+		assert.deepStrictEqual(obj.a, { x: 0 })
+	}
 
-			assert.throws(() => { json.writeJSON("dir", "main.json") })
-
-			await simulateIOError(() => {
-				assert.throws(() => { json.writeJSON("foo/main.json", "main.json") })
-			})
-		} finally {
-			await uninit()
+	export function moveJSONByPathTest() {
+		const obj: any = {
+			a: 1,
+			b: 2,
+			c: {
+				d: 1
+			}
 		}
+		json.moveJSONByPath(obj, [`b`], 'c/d')
+		assert.deepStrictEqual(obj, {
+			a: 1,
+			c: {
+				b: 2,
+				d: 1
+			}
+		})
+		json.moveJSONByPath(obj, [`a`], 'c/')
+		assert.deepStrictEqual(obj, {
+			c: {
+				b: 2,
+				d: 1,
+				a: 1,
+			}
+		})
+		json.moveJSONByPath(obj, [`c/b`, 'c/a'], null)
+		assert.deepStrictEqual(obj, {
+			c: {
+				d: 1,
+			},
+			b: 2,
+			a: 1,
+		})
+	}
+
+	export function deleteJSONByPathTest() {
+		const obj: any = { a: 1, b: { x: 2 } }
+		json.deleteJSONByPath(obj, `a`)
+		assert.strictEqual(obj.a, undefined)
+		json.deleteJSONByPath(obj, `b/x`)
+		assert.deepStrictEqual(obj.b, {})
+		json.deleteJSONByPath(obj, `c`)
+		assert.deepStrictEqual(obj.b, {})
 	}
 
 }

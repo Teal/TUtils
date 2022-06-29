@@ -157,4 +157,8 @@ export namespace miscTest {
 		assert.strictEqual(misc.formatSize(1024 * 1024 * 1024 * 1024), "1TB")
 	}
 
+	export async function parallelForEachTest() {
+		assert.deepStrictEqual(await misc.parallelForEach([1, 2], item => item), [1, 2])
+	}
+
 }

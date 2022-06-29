@@ -2,7 +2,7 @@ import * as assert from "assert"
 import * as fsSync from "fs"
 import * as path from "path"
 import * as fileSystem from "../src/fileSystem"
-import { init, rootDir, simulateIOError, uninit } from "./helpers/fsHelper"
+import { check, init, rootDir, simulateIOError, uninit } from "./helpers/fsHelper"
 
 export namespace fileSystemTest {
 
@@ -271,6 +271,25 @@ export namespace fileSystemTest {
 		assert.strictEqual(fsSync.readFileSync("foo/goo.txt", "utf-8"), "A你好")
 
 		await assert.rejects(async () => { await fs.appendFile("dir", "你好") }, { code: "EISDIR" })
+	}
+
+	export async function readJSONTest() {
+		await fs.writeFile("foo/goo.json", "[1]")
+		assert.deepStrictEqual(await fs.readJSON("foo/goo.json"), [1])
+		await fs.writeFile("foo/goo2.json", "")
+		assert.deepStrictEqual(await fs.readJSON("foo/goo2.json"), undefined)
+		assert.deepStrictEqual(await fs.readJSON("foo/goo3.json"), undefined)
+	}
+
+	export async function writeJSONTest() {
+		await fs.writeJSON("foo/main.json", "main.json")
+		check({ "foo/main.json": `"main.json"` })
+
+		assert.rejects(async () => { await fs.writeJSON("dir", "main.json") })
+
+		await simulateIOError(() => {
+			assert.rejects(async () => { await fs.writeJSON("foo/main.json", "main.json") })
+		})
 	}
 
 	export async function searchTextTest() {

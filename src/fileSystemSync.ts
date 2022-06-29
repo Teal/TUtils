@@ -2,7 +2,7 @@ import { accessSync, appendFileSync, constants, copyFileSync, Dirent, existsSync
 import { dirname, join, relative, resolve as resolvePath, sep } from "path"
 import { SearchTextResult, WalkOptions } from "./fileSystem"
 import { Matcher, Pattern } from "./matcher"
-import { escapeRegExp, replaceString } from "./misc"
+import { escapeRegExp, replaceString, stripBOM } from "./misc"
 import { appendIndex, joinPath } from "./path"
 
 /**
@@ -401,6 +401,32 @@ export function appendFile(path: string, data: string | Buffer) {
 }
 
 /**
+ * 读取指定的 JSON 文件
+ * @param path 要读取的文件路径
+ */
+export function readJSON(path: string) {
+	const text = readText(path, false)
+	if (text === null) {
+		return
+	}
+	try {
+		return JSON.parse(stripBOM(text))
+	} catch { }
+}
+
+/**
+ * 保存指定的 JSON 文件
+ * @param path 要保存的文件路径
+ * @param data 要保存的 JSON 数据
+ */
+export function writeJSON(path: string, data: any) {
+	data = JSON.stringify(data)
+	const tmp = path + ".swp~"
+	writeFile(tmp, data)
+	moveFile(tmp, path)
+}
+
+/**
  * 搜索指定文件
  * @param path 要搜索的文件路径
  * @param search 搜索的源
@@ -565,12 +591,12 @@ export function readLink(path: string) {
  * @param dest 要复制的目标路径
  * @param overwrite 是否覆盖已有的目标
  * @param preserveLinks 是否保留链接
- * @param filter 忽略的通配符
+ * @param ignore 忽略的通配符
  * @returns 返回已复制的文件数
  */
-export function copyDir(src: string, dest: string, overwrite = true, preserveLinks = true, filter?: Pattern) {
-	if (filter && !(filter instanceof Matcher)) {
-		filter = new Matcher(filter, src)
+export function copyDir(src: string, dest: string, overwrite = true, preserveLinks = true, ignore?: Pattern) {
+	if (ignore && !(ignore instanceof Matcher)) {
+		ignore = new Matcher(ignore, src)
 	}
 	createDir(dest)
 	const entries = readdirSync(src, { withFileTypes: true })
@@ -578,13 +604,13 @@ export function copyDir(src: string, dest: string, overwrite = true, preserveLin
 	let firstError: NodeJS.ErrnoException | undefined
 	for (const entry of entries) {
 		const fromChild = joinPath(src, entry.name)
-		if (filter && (filter as Matcher).test(fromChild)) {
+		if (ignore && (ignore as Matcher).test(fromChild)) {
 			continue
 		}
 		const toChild = join(dest, entry.name)
 		try {
 			if (entry.isDirectory()) {
-				count += copyDir(fromChild, toChild, overwrite, preserveLinks, filter)
+				count += copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
 			} else if (preserveLinks && entry.isSymbolicLink()) {
 				if (copyLink(fromChild, toChild, overwrite)) {
 					count++

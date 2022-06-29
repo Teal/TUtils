@@ -316,3 +316,16 @@ export function formatSize(byteSize: number) {
 	}
 	return byteSize.toFixed(2).replace(/\.00$|0$/, "") + unit
 }
+
+/**
+ * 同时遍历数组每一项并执行异步回调函数
+ * @param array 要遍历的数组
+ * @param callback 要执行的回调函数
+ */
+export function parallelForEach<T, R>(array: T[], callback: (item: T) => R) {
+	const promises: R[] = []
+	for (const item of array) {
+		promises.push(callback(item))
+	}
+	return Promise.all(promises)
+}

@@ -486,12 +486,12 @@ export class MemoryFileSystem extends FileSystem {
 	 * @param dest 要复制的目标路径
 	 * @param overwrite 是否覆盖已有的目标
 	 * @param preserveLinks 是否保留链接
-	 * @param filter 忽略的通配符
+	 * @param ignore 忽略的通配符
 	 * @returns 返回已复制的文件数
 	 */
-	async copyDir(src: string, dest: string, overwrite = true, preserveLinks?: boolean, filter?: Pattern) {
-		if (filter && !(filter instanceof Matcher)) {
-			filter = new Matcher(filter, src)
+	async copyDir(src: string, dest: string, overwrite = true, preserveLinks?: boolean, ignore?: Pattern) {
+		if (ignore && !(ignore instanceof Matcher)) {
+			ignore = new Matcher(ignore, src)
 		}
 		await this.createDir(dest)
 		const entries = await this.readDir(src, true)
@@ -499,13 +499,13 @@ export class MemoryFileSystem extends FileSystem {
 		let firstError: NodeJS.ErrnoException | undefined
 		for (const entry of entries) {
 			const fromChild = joinPath(src, entry.name)
-			if (filter && (filter as Matcher).test(fromChild)) {
+			if (ignore && (ignore as Matcher).test(fromChild)) {
 				continue
 			}
 			const toChild = join(dest, entry.name)
 			try {
 				if (entry.isDirectory()) {
-					count += await this.copyDir(fromChild, toChild, overwrite, preserveLinks, filter)
+					count += await this.copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
 				} else {
 					if (await this.copyFile(fromChild, toChild, overwrite)) {
 						count++
