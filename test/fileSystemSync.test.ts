@@ -331,7 +331,6 @@ export namespace fileSystemSyncTest {
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
 		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/f4.txt", /X(\d+)/ig, "$1"), false)
 		assert.strictEqual(fsSync.readFileSync("dir/sub1/f4.txt", "utf-8"), "4.txt")
-		assert.strictEqual(fileSystemSync.replaceText("dir/sub1/not-exists.txt", /X(\d+)/ig, "$1"), false)
 	}
 	export function replaceAllTextTest() {
 		assert.strictEqual(fileSystemSync.replaceAllText("f3.txt", "f3", "$&"), 1)

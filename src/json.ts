@@ -6,7 +6,7 @@ export function parseJSON<T>(value: string) {
 	try {
 		return new Function(`return ${value}`)() as T
 	} catch {
-		return null
+		return undefined
 	}
 }
 

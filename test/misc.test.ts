@@ -5,10 +5,10 @@ export namespace miscTest {
 
 	export function mergeTest() {
 		assert.strictEqual(misc.merge(1, 2), 2)
-		assert.deepStrictEqual(misc.merge({ a: 1 }, { b: 2 }), { a: 1, b: 2 })
+		assert.deepStrictEqual(misc.merge(undefined, { a: 1 }, undefined, { b: 2 }, undefined), { a: 1, b: 2 })
 		assert.deepStrictEqual(misc.merge({ a: [1] }, { a: [2] }), { a: [1, 2] })
 
-		const obj = { a: null, b: 1 }
+		const obj = { a: null as any, b: 1 }
 		obj.a = obj
 		assert.strictEqual(misc.merge({ a: {} }, obj).b, 1)
 	}
@@ -115,6 +115,8 @@ export namespace miscTest {
 		assert.strictEqual(misc.formatRelativeDate(new Date("2014/01/01 03:05:07"), new Date("2014/01/04 04:06:19")), new Date("2014/01/01 03:05:07").toLocaleDateString())
 		assert.strictEqual(misc.formatRelativeDate(new Date("2014/01/01 03:05:07"), new Date("2014/02/03 04:06:19")), new Date("2014/01/01 03:05:07").toLocaleDateString())
 		assert.strictEqual(misc.formatRelativeDate(new Date("2014/01/01 03:05:07"), new Date("2015/02/03 04:06:19")), new Date("2014/01/01 03:05:07").toLocaleDateString())
+
+		assert.strictEqual(typeof misc.formatRelativeDate(new Date("2014/01/01 03:05:07")), "string")
 	}
 
 	export function formatHRTimeTest() {

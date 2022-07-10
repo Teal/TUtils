@@ -3,6 +3,18 @@ import * as json from "../src/json"
 
 export namespace jsonTest {
 
+	export function parseJSONTest() {
+		assert.deepStrictEqual(json.parseJSON(`{}`), {})
+		assert.strictEqual(json.parseJSON(`3`), 3)
+		assert.strictEqual(json.parseJSON(``), undefined)
+		assert.strictEqual(json.parseJSON(`x`), undefined)
+	}
+
+	export function formatJSONTest() {
+		assert.deepStrictEqual(json.formatJSON({}), `{}`)
+		assert.deepStrictEqual(json.formatJSON(3), `3`)
+	}
+
 	export function normalizeJSONTest() {
 		// https://github.com/sindresorhus/strip-json-comments/blob/master/test.js
 		assert.strictEqual(json.normalizeJSON('//comment\n{"a":"b"}'), '         \n{"a":"b"}')
@@ -56,6 +68,7 @@ export namespace jsonTest {
 		assert.strictEqual(json.readJSONByPath({ a: [1] }, "a/0"), 1)
 		assert.strictEqual(json.readJSONByPath({ a: [1] }, "a/length"), 1)
 		assert.strictEqual(json.readJSONByPath({ a: [1] }, "b"), undefined)
+		assert.strictEqual(json.readJSONByPath({ a: [1] }, "b/d"), undefined)
 	}
 
 	export function writeJSONByPathTest() {
@@ -102,6 +115,14 @@ export namespace jsonTest {
 			b: 2,
 			a: 1,
 		})
+		json.moveJSONByPath(obj, [`c/b/d`, 'c/a/d'], null)
+		assert.deepStrictEqual(obj, {
+			c: {
+				d: 1,
+			},
+			b: 2,
+			a: 1,
+		})
 	}
 
 	export function deleteJSONByPathTest() {
@@ -111,6 +132,8 @@ export namespace jsonTest {
 		json.deleteJSONByPath(obj, `b/x`)
 		assert.deepStrictEqual(obj.b, {})
 		json.deleteJSONByPath(obj, `c`)
+		assert.deepStrictEqual(obj.b, {})
+		json.deleteJSONByPath(obj, `c/d`)
 		assert.deepStrictEqual(obj.b, {})
 	}
 

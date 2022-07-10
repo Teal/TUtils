@@ -1,7 +1,7 @@
 {
   "name": "tutils",
   "private": true,
-  "version": "2.3.4",
+  "version": "2.3.6",
   "repository": "https://github.com/Teal/TUtils",
   "description": "200+ well-tested helper functions & classes for Node.js, including globbing, file watcher, zip, socket and so on | 200+ 个 NodeJS 工具库，顶 140+ 个 NPM 依赖，比如通配符、文件监听、网络库、Zip 压缩等",
   "license": "SEE LICENSE IN LICENSE",
@@ -21,8 +21,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json --declaration && node -e \"var pkg = require('./package.json'); delete pkg.private; delete pkg.devDependencies; delete pkg.scripts; fs.writeFileSync('dist/package.json', JSON.stringify(pkg, undefined, 2)); fs.copyFileSync('README.md', 'dist/README.md'); fs.copyFileSync('LICENSE', 'dist/LICENSE');\"",
     "watch": "tsc -p tsconfig.json --declaration --watch",
-    "test": "node -e \"if (process.argv[7]) { process.argv[6] = process.argv[7].replace(/^src([\\\\/].*)\\.ts/, 'test$' + '1.test.ts'); process.argv.splice(7, 1) } require('mocha/bin/mocha')\" mocha -r ts-node/register/transpile-only --ui exports **/*.test.ts",
-    "coverage": "node -e \"process.argv[8] = require.resolve('mocha/bin/mocha'); if (process.argv[14]) { process.argv[13] = process.argv[14].replace(/^src([\\\\/].*)\\.ts/, 'test$' + '1.test.ts'); process.argv.splice(14, 1) } require('nyc/bin/nyc')\" nyc --reporter=text-summary --reporter=html --report-dir=coverage --temp-dir=coverage/.nyc_output --extension=.ts --include=src/** mocha -r ts-node/register/transpile-only --ui exports **/*.test.ts",
+    "test": "node -e \"if (process.argv[7]) { process.argv[6] = process.argv[7].replace(/^src([\\\\/].*)\\.ts/, 'test$' + '1.test.ts'); process.argv.splice(7, 1) } require('mocha/bin/mocha')\" mocha -r ts-node/register/transpile-only --ui exports '**/*.test.ts'",
+    "coverage": "node -e \"process.argv[8] = require.resolve('mocha/bin/mocha'); if (process.argv[14]) { process.argv[13] = process.argv[14].replace(/^src([\\\\/].*)\\.ts/, 'test$' + '1.test.ts'); process.argv.splice(14, 1) } require('nyc/bin/nyc')\" nyc --reporter=text-summary --reporter=html --report-dir=coverage --temp-dir=coverage/.nyc_output --extension=.ts --include=src/** mocha -r ts-node/register/transpile-only --ui exports '**/*.test.ts'",
     "coveralls": "nyc report --reporter=text-lcov --report-dir=coverage --temp-dir=coverage/.nyc_output | coveralls"
   }
 }

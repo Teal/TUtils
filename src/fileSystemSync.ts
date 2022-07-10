@@ -423,7 +423,12 @@ export function writeJSON(path: string, data: any) {
 	data = JSON.stringify(data)
 	const tmp = path + ".swp~"
 	writeFile(tmp, data)
-	moveFile(tmp, path)
+	try {
+		moveFile(tmp, path)
+	} catch (e) {
+		deleteFile(tmp)
+		throw e
+	}
 }
 
 /**
@@ -492,10 +497,7 @@ export function searchAllText(pattern: string, search: string | RegExp, baseDir?
  */
 export function replaceText(path: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string)) {
 	const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
-	const content = readText(path, false)
-	if (content === null) {
-		return false
-	}
+	const content = readText(path)
 	const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
 	if (repalced !== null) {
 		writeFile(path, repalced)

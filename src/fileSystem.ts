@@ -577,7 +577,12 @@ export class FileSystem {
 		data = JSON.stringify(data)
 		const tmp = path + ".swp~"
 		await this.writeFile(tmp, data)
-		await this.moveFile(tmp, path)
+		try {
+			await this.moveFile(tmp, path)
+		} catch (e) {
+			await this.deleteFile(tmp)
+			throw e
+		}
 	}
 
 	/**
@@ -646,10 +651,7 @@ export class FileSystem {
 	 */
 	async replaceText(path: string, search: string | RegExp, replacer: string | ((source: string, ...args: any[]) => string)) {
 		const regexp = typeof search === "string" ? new RegExp(escapeRegExp(search), "g") : search
-		const content = await this.readText(path, false)
-		if (content === null) {
-			return false
-		}
+		const content = await this.readText(path)
 		const repalced = replaceString(content, regexp, typeof search === "string" && typeof replacer !== "function" ? () => replacer : replacer)
 		if (repalced !== null) {
 			await this.writeFile(path, repalced)
