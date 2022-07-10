@@ -680,10 +680,12 @@ export function copyLink(src: string, dest: string, overwrite = true) {
  * @param preserveLinks 是否保留链接
  */
 export function moveDir(src: string, dest: string, overwrite = true, preserveLinks = true) {
-	try {
-		moveFile(src, dest, overwrite)
-		return
-	} catch { }
+	if (!preserveLinks) {
+		try {
+			moveFile(src, dest, overwrite)
+			return
+		} catch { }
+	}
 	createDir(dest)
 	const entries = readdirSync(src, { withFileTypes: true })
 	let firstError: NodeJS.ErrnoException | undefined

@@ -894,9 +894,10 @@ export class FileSystem {
 	 * @param src 要移动的源路径
 	 * @param dest 要移动的目标路径
 	 * @param overwrite 是否允许覆盖现有的目标
+	 * @param preserveLinks 是否保留链接
 	 */
 	moveDir(src: string, dest: string, overwrite = true, preserveLinks = true): Promise<any> {
-		return this.moveFile(src, dest, overwrite).catch(() => new Promise<void>((resolve, reject) => {
+		const fallbackMove = () => new Promise<void>((resolve, reject) => {
 			this.createDir(dest).then(() => {
 				safeCall(readdir, [src, { withFileTypes: true }], (error, entries: Dirent[]) => {
 					if (error) {
@@ -937,7 +938,11 @@ export class FileSystem {
 					}
 				})
 			}, reject)
-		}))
+		})
+		if (!preserveLinks) {
+			return fallbackMove()
+		}
+		return this.moveFile(src, dest, overwrite).catch(fallbackMove)
 	}
 
 	/**
