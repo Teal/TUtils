@@ -611,15 +611,29 @@ export function copyDir(src: string, dest: string, overwrite = true, preserveLin
 		}
 		const toChild = join(dest, entry.name)
 		try {
-			if (entry.isDirectory()) {
-				count += copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
-			} else if (preserveLinks && entry.isSymbolicLink()) {
-				if (copyLink(fromChild, toChild, overwrite)) {
-					count++
-				}
-			} else {
+			if (entry.isFile()) {
 				if (copyFile(fromChild, toChild, overwrite)) {
 					count++
+				}
+			} else if (entry.isDirectory()) {
+				count += copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
+			} else if (entry.isSymbolicLink()) {
+				if (preserveLinks) {
+					if (copyLink(fromChild, toChild, overwrite)) {
+						count++
+					}
+				} else {
+					try {
+						count += copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
+					} catch (e) {
+						if (e.code === "ENOTDIR") {
+							if (copyFile(fromChild, toChild, overwrite)) {
+								count++
+							}
+						} else {
+							throw e
+						}
+					}
 				}
 			}
 		} catch (e) {

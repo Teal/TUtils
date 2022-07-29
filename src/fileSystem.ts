@@ -812,10 +812,19 @@ export class FileSystem {
 								const toChild = join(dest, entry.name)
 								if (entry.isDirectory()) {
 									promise = this.copyDir(fromChild, toChild, overwrite, preserveLinks, ignore)
-								} else if (preserveLinks && entry.isSymbolicLink()) {
-									promise = this.copyLink(fromChild, toChild, overwrite)
-								} else {
+								} else if (entry.isFile()) {
 									promise = this.copyFile(fromChild, toChild, overwrite)
+								} else if (entry.isSymbolicLink()) {
+									if (preserveLinks) {
+										promise = this.copyLink(fromChild, toChild, overwrite)
+									} else {
+										promise = this.copyDir(fromChild, toChild, overwrite, preserveLinks, ignore).catch(e => {
+											if (e.code === "ENOTDIR") {
+												return this.copyFile(fromChild, toChild, overwrite)
+											}
+											throw e
+										})
+									}
 								}
 								promise.then(childCount => {
 									count += childCount as number
