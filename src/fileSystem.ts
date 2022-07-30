@@ -922,10 +922,19 @@ export class FileSystem {
 								let promise: Promise<any>
 								if (entry.isDirectory()) {
 									promise = this.moveDir(fromChild, toChild, overwrite, preserveLinks)
-								} else if (preserveLinks && entry.isSymbolicLink()) {
-									promise = this.moveLink(fromChild, toChild, overwrite)
-								} else {
+								} else if (entry.isFile()) {
 									promise = this.moveFile(fromChild, toChild, overwrite)
+								} else if (entry.isSymbolicLink()) {
+									if (preserveLinks) {
+										promise = this.moveLink(fromChild, toChild, overwrite)
+									} else {
+										promise = this.moveDir(fromChild, toChild, overwrite, preserveLinks).catch(e => {
+											if (e.code === "ENOTDIR") {
+												return this.moveLink(fromChild, toChild, overwrite)
+											}
+											throw e
+										})
+									}
 								}
 								promise.then(() => {
 									if (--pending === 0) {

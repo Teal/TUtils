@@ -711,10 +711,22 @@ export function moveDir(src: string, dest: string, overwrite = true, preserveLin
 		try {
 			if (entry.isDirectory()) {
 				moveDir(fromChild, toChild, overwrite, preserveLinks)
-			} else if (preserveLinks && entry.isSymbolicLink()) {
-				moveLink(fromChild, toChild, overwrite)
-			} else {
+			} else if (entry.isFile()) {
 				moveFile(fromChild, toChild, overwrite)
+			} else if (entry.isSymbolicLink()) {
+				if (preserveLinks) {
+					moveLink(fromChild, toChild, overwrite)
+				} else {
+					try {
+						moveDir(fromChild, toChild, overwrite, preserveLinks)
+					} catch (e) {
+						if (e.code === "ENOTDIR") {
+							moveFile(fromChild, toChild, overwrite)
+						} else {
+							throw e
+						}
+					}
+				}
 			}
 		} catch (e) {
 			firstError = firstError || e
