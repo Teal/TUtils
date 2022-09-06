@@ -1,7 +1,7 @@
 {
   "name": "tutils",
   "private": true,
-  "version": "2.3.6",
+  "version": "2.4.0",
   "repository": "https://github.com/Teal/TUtils",
   "description": "200+ well-tested helper functions & classes for Node.js, including globbing, file watcher, zip, socket and so on | 200+ 个 NodeJS 工具库，顶 140+ 个 NPM 依赖，比如通配符、文件监听、网络库、Zip 压缩等",
   "license": "SEE LICENSE IN LICENSE",
@@ -11,12 +11,12 @@
   },
   "devDependencies": {
     "@types/mocha": "^9.1.1",
-    "@types/node": "^18.0.0",
+    "@types/node": "^18.7.15",
     "coveralls": "^3.1.1",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
-    "ts-node": "^10.8.1",
-    "typescript": "^4.7.4"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --declaration && node -e \"var pkg = require('./package.json'); delete pkg.private; delete pkg.devDependencies; delete pkg.scripts; fs.writeFileSync('dist/package.json', JSON.stringify(pkg, undefined, 2)); fs.copyFileSync('README.md', 'dist/README.md'); fs.copyFileSync('LICENSE', 'dist/LICENSE');\"",
