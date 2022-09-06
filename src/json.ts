@@ -35,7 +35,7 @@ export function normalizeJSON(value: string, aligned = true) {
 /**
  * 读取一个 JSON 数据
  * @param value JSON 数据
- * @param key 键值，多级字段用 `/` 分割
+ * @param key 键值，多级字段用 `.` 分割，如果键本身包含 `.`，需要写成 `..`
  */
 export function readJSONByPath(value: any, key: string) {
 	const info = lookupKey(value, key)
@@ -47,7 +47,7 @@ export function readJSONByPath(value: any, key: string) {
 /**
  * 写入一个 JSON 数据
  * @param value JSON 数据
- * @param key 键值，多级字段用 `/` 分割
+ * @param key 键值，多级字段用 `.` 分割，如果键本身包含 `.`，需要写成 `..`
  * @param data 要写入的数据
  */
 export function writeJSONByPath(value: any, key: string, data: any) {
@@ -58,7 +58,7 @@ export function writeJSONByPath(value: any, key: string, data: any) {
 /**
  * 移动一个 JSON 数据
  * @param value JSON 数据
- * @param keys 移动的键值，多级字段用 `/` 分割
+ * @param keys 移动的键值，多级字段用 `.` 分割，如果键本身包含 `.`，需要写成 `..`
  * @param before 插入的位置
  */
 export function moveJSONByPath(value: any, keys: string[], before: string | null) {
@@ -88,21 +88,26 @@ export function moveJSONByPath(value: any, keys: string[], before: string | null
 /**
  * 删除一个 JSON 数据
  * @param value JSON 数据
- * @param key 键值，多级字段用 `/` 分割
+ * @param key 键值，多级字段用 `.` 分割，如果键本身包含 `.`，需要写成 `..`
  * @returns 返回是否删除成功
  */
 export function deleteJSONByPath(value: any, key: string) {
 	const info = lookupKey(value, key)
 	if (info) {
 		return delete info.json[info.key]
+		
 	}
 	return false
 }
 
 function lookupKey(json: any, key: string, create?: boolean) {
-	const keys = key.split("/")
+	const keys = key.split(".")
 	for (let i = 0; i < keys.length - 1; i++) {
-		const key = keys[i]
+		let key = keys[i]
+		while (i + 2 < keys.length && !keys[i + 1]) {
+			key += "." + keys[i + 2]
+			keys.splice(i, 3, key)
+		}
 		if (json[key] == undefined || typeof json[key] !== "object") {
 			if (!create) {
 				return null
