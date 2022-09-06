@@ -95,7 +95,7 @@ export function deleteJSONByPath(value: any, key: string) {
 	const info = lookupKey(value, key)
 	if (info) {
 		return delete info.json[info.key]
-		
+
 	}
 	return false
 }
@@ -105,8 +105,13 @@ function lookupKey(json: any, key: string, create?: boolean) {
 	for (let i = 0; i < keys.length - 1; i++) {
 		let key = keys[i]
 		while (i + 2 < keys.length && !keys[i + 1]) {
-			key += "." + keys[i + 2]
-			keys.splice(i, 3, key)
+			key += "." + keys[i += 2]
+			if (i >= keys.length - 1) {
+				return {
+					json,
+					key
+				}
+			}
 		}
 		if (json[key] == undefined || typeof json[key] !== "object") {
 			if (!create) {
